@@ -1,0 +1,19 @@
+.gallery-page{min-height:100vh;padding-top:100px}
+.gallery-masonry{columns:3;column-gap:1px}
+.gm-card{break-inside:avoid;margin-bottom:1px;position:relative;overflow:hidden;cursor:pointer;animation:fadeUp .4s ease both;background:var(--surface)}
+.gm-card img{width:100%;display:block;transition:transform .5s ease}
+.gm-card:hover img{transform:scale(1.04)}
+.gm-placeholder{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.75rem;color:var(--muted);background:linear-gradient(135deg,var(--surface),var(--dark));font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;min-height:200px}
+.gm-overlay{position:absolute;inset:0;background:linear-gradient(transparent 40%,rgba(0,0,0,.9));display:flex;flex-direction:column;justify-content:flex-end;padding:1.25rem;opacity:0;transition:opacity .3s ease}
+.gm-card:hover .gm-overlay{opacity:1}
+.gm-overlay p{font-family:var(--font-display);font-weight:600;font-size:.9rem;letter-spacing:.05em;margin-top:.5rem}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:2000;display:flex;align-items:center;justify-content:center;padding:2rem;animation:fadeUp .2s ease}
+.lightbox-inner{position:relative;max-width:900px;width:100%;max-height:90vh;display:flex;flex-direction:column}
+.lightbox-inner img{width:100%;max-height:75vh;object-fit:contain}
+.lb-close{position:absolute;top:-3rem;right:0;background:none;border:1px solid var(--border);color:var(--white);width:36px;height:36px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.lb-close:hover{border-color:var(--gold);color:var(--gold)}
+.lb-info{padding:1rem;background:var(--dark);border-top:1px solid var(--border)}
+.lb-info h3{font-family:var(--font-display);font-weight:600;letter-spacing:.05em;margin-top:.5rem}
+.lb-info p{color:var(--muted);font-size:.9rem;margin-top:.25rem}
+@media(max-width:900px){.gallery-masonry{columns:2}}
+@media(max-width:500px){.gallery-masonry{columns:1}}

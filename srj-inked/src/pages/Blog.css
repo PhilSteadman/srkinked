@@ -1,0 +1,27 @@
+.blog-page{min-height:100vh;padding-top:100px}
+.blog-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border)}
+.blog-card{background:var(--dark);display:flex;flex-direction:column;animation:fadeUp .4s ease both;transition:background .2s}
+.blog-card:hover{background:var(--surface)}
+.blog-img{aspect-ratio:16/9;overflow:hidden}
+.blog-img img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.blog-card:hover .blog-img img{transform:scale(1.04)}
+.blog-img-placeholder{width:100%;height:100%;background:linear-gradient(135deg,var(--surface),var(--dark));display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.blog-body{padding:1.5rem;display:flex;flex-direction:column;flex:1;gap:.75rem}
+.blog-tags{display:flex;gap:.4rem;flex-wrap:wrap}
+.blog-body h3{font-family:var(--font-display);font-size:1.05rem;letter-spacing:.03em;font-weight:600;line-height:1.3}
+.blog-excerpt{font-size:.85rem;color:var(--muted);line-height:1.6;flex:1}
+.blog-footer{display:flex;justify-content:space-between;align-items:center;padding-top:.75rem;border-top:1px solid var(--border);margin-top:auto}
+.blog-date{font-size:.75rem;color:var(--muted)}
+.blog-read{font-family:var(--font-display);font-size:.7rem;letter-spacing:.15em;color:var(--gold);display:flex;align-items:center;gap:.4rem;font-weight:600}
+.post-page{min-height:100vh;padding-top:100px}
+.post-hero{padding:4rem 2rem;text-align:center;border-bottom:1px solid var(--border)}
+.post-hero h1{font-family:var(--font-display);font-size:clamp(1.8rem,4vw,3rem);font-weight:900;letter-spacing:.05em;max-width:800px;margin:0 auto 1rem}
+.post-meta{display:flex;align-items:center;justify-content:center;gap:1rem;color:var(--muted);font-size:.85rem}
+.post-cover{width:100%;max-height:500px;object-fit:cover}
+.post-content{max-width:760px;margin:4rem auto;padding:0 2rem;font-size:1.05rem;line-height:1.85;color:#c8c4ba}
+.post-content h2{font-family:var(--font-display);font-size:1.5rem;color:var(--white);margin:2rem 0 .75rem;font-weight:600}
+.post-content h3{font-family:var(--font-display);font-size:1.1rem;color:var(--gold);margin:1.5rem 0 .5rem;font-weight:600}
+.post-content p{margin-bottom:1.25rem}
+.post-content strong{color:var(--white)}
+@media(max-width:900px){.blog-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.blog-grid{grid-template-columns:1fr}}
