@@ -66,7 +66,10 @@ export default function Admin(){
   return(
     <div className="admin-layout">
       <div className={`admin-sidebar${open?' open':''}`}>
-        <div className="admin-logo"><span className="logo-srj" style={{fontSize:'1.5rem'}}>SRJ</span><span className="logo-inked" style={{fontSize:'.55rem'}}>ADMIN</span></div>
+        <div className="admin-logo">
+          <img src="/logo-gold.png" alt="SRJ Inked" style={{height:'44px',width:'auto',marginBottom:'.25rem'}}/>
+          <span style={{fontFamily:'var(--font-display)',fontSize:'.55rem',letterSpacing:'.4em',color:'var(--gold)',fontWeight:600}}>ADMIN PANEL</span>
+        </div>
         <nav className="admin-nav">
           {TABS.map(t=>(
             <button key={t.id} className={`admin-nav-btn${tab===t.id?' active':''}`} onClick={()=>{setTab(t.id);setOpen(false)}}>

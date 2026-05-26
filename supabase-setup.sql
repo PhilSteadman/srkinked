@@ -117,4 +117,4 @@ create policy "products_auth_all" on products for all using (auth.role() = 'auth
 -- After running this script go to:
 -- Supabase Dashboard > Authentication > Users > Invite User
 -- Enter your email to create the admin account.
--- Sign in at srj-inked.netlify.app/admin
+-- Sign in at yoursite.netlify.app/admin

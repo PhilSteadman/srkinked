@@ -2,14 +2,18 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { Instagram, Facebook } from 'lucide-react'
 import './Footer.css'
+
 const nav=[['/',`Home`],['/gallery','Gallery'],['/booking','Book Now'],['/events','Events'],['/blog','Journal'],['/pricing','Pricing'],['/videos','Videos'],['/contact','Contact']]
+
 export default function Footer() {
   return (
     <footer className="footer">
       <div className="footer-top">
         <div className="footer-brand">
-          <div className="footer-logo"><span className="logo-srj">SRJ</span><span className="logo-inked">INKED</span></div>
-          <p>Where Your Story Meets The Canvas</p>
+          <Link to="/" className="footer-logo-link">
+            <img src="/logo-gold.png" alt="SRJ Inked" className="footer-logo-img"/>
+          </Link>
+          <p className="footer-tagline">Where Your Story Meets The Canvas</p>
           <div className="footer-socials">
             <a href="https://www.facebook.com/srjinked" target="_blank" rel="noreferrer" aria-label="Facebook"><Facebook size={20}/></a>
             <a href="https://www.instagram.com/srjinked" target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram size={20}/></a>
@@ -18,8 +22,16 @@ export default function Footer() {
             </a>
           </div>
         </div>
-        <div className="footer-nav"><h4>Navigate</h4>{nav.map(([to,l])=><Link key={to} to={to}>{l}</Link>)}</div>
-        <div className="footer-nav"><h4>Info</h4><Link to="/pricing">Pricing</Link><Link to="/contact">Aftercare Guide</Link><Link to="/contact">FAQ</Link></div>
+        <div className="footer-nav">
+          <h4>Navigate</h4>
+          {nav.map(([to,l])=><Link key={to} to={to}>{l}</Link>)}
+        </div>
+        <div className="footer-nav">
+          <h4>Info</h4>
+          <Link to="/pricing">Pricing</Link>
+          <Link to="/contact">Aftercare Guide</Link>
+          <Link to="/contact">FAQ</Link>
+        </div>
         <div className="footer-contact">
           <h4>Get In Touch</h4>
           <p>DMs open on Instagram & Facebook</p>

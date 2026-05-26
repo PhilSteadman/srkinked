@@ -10,8 +10,8 @@ export default function AdminLogin(){
     <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--black)',padding:'2rem'}}>
       <div style={{background:'var(--dark)',border:'1px solid var(--border)',padding:'3rem',width:'100%',maxWidth:'420px'}}>
         <div style={{display:'flex',flexDirection:'column',alignItems:'center',marginBottom:'2rem'}}>
-          <span style={{fontFamily:'var(--font-hero)',fontSize:'3rem',letterSpacing:'.2em'}}>SRJ</span>
-          <span style={{fontFamily:'var(--font-display)',fontSize:'.6rem',letterSpacing:'.5em',color:'var(--gold)',fontWeight:600}}>INKED \u00b7 ADMIN</span>
+          <img src="/logo-gold.png" alt="SRJ Inked" style={{height:'80px',width:'auto',marginBottom:'.5rem'}}/>
+          <span style={{fontFamily:'var(--font-display)',fontSize:'.6rem',letterSpacing:'.5em',color:'var(--gold)',fontWeight:600}}>ADMIN PANEL</span>
         </div>
         <form onSubmit={submit} style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
           <div className="form-group"><label>Email</label><input type="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="admin@email.com" autoComplete="username"/></div>
