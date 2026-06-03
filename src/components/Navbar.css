@@ -11,11 +11,43 @@
 .navbar-links a:hover,.navbar-links a.active{color:var(--white)}
 .navbar-links a:hover::after,.navbar-links a.active::after{transform:scaleX(1)}
 .navbar-cta{font-size:.7rem;padding:.6rem 1.5rem}
-.navbar-hamburger{display:none;background:none;border:none;color:var(--white);cursor:pointer}
-.mobile-menu{display:none;flex-direction:column;gap:.5rem;padding:1.5rem 2rem;background:var(--dark);border-top:1px solid var(--border);transform:translateY(-100%);opacity:0;transition:all .3s ease}
-.mobile-menu.open{transform:translateY(0);opacity:1}
-.mobile-logo-wrap{display:flex;justify-content:center;padding:.75rem 0 1.25rem;border-bottom:1px solid var(--border);margin-bottom:.5rem}
+.navbar-hamburger{display:none;background:none;border:none;color:var(--white);cursor:pointer;padding:.25rem}
+
+/* Mobile menu — hidden by default, never blocks scroll */
+.mobile-menu{
+  display:flex;
+  flex-direction:column;
+  gap:.5rem;
+  padding:1.5rem 2rem;
+  background:var(--dark);
+  border-top:1px solid var(--border);
+  /* Hidden state */
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  max-height:100dvh;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  transform:translateY(-105%);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:transform .3s ease, opacity .3s ease, visibility .3s ease;
+  z-index:999;
+}
+.mobile-menu.open{
+  transform:translateY(0);
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+}
+.mobile-logo-wrap{display:flex;justify-content:center;padding:4rem 0 1.25rem;border-bottom:1px solid var(--border);margin-bottom:.5rem}
 .mobile-logo-img{height:60px;width:auto}
-.mobile-menu a{font-family:var(--font-display);font-size:.85rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);padding:.75rem 0;border-bottom:1px solid var(--border);font-weight:600}
+.mobile-menu a{font-family:var(--font-display);font-size:.85rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);padding:.75rem 0;border-bottom:1px solid var(--border);font-weight:600;display:block}
 .mobile-menu a.active{color:var(--gold)}
-@media(max-width:900px){.navbar-links,.navbar-cta{display:none}.navbar-hamburger{display:block}.mobile-menu{display:flex}}
+
+@media(max-width:900px){
+  .navbar-links,.navbar-cta{display:none}
+  .navbar-hamburger{display:block}
+}
