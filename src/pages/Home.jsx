@@ -90,7 +90,7 @@ export default function Home() {
             <div className="gold-line" style={{margin:'1rem auto 2rem'}}/>
           </div>
           <div className="pt-cards">
-            {[{label:'Minimum Charge',price:'\u00a320'},{label:'Under An Hour',price:'\u00a330'},{label:'Per Hour (Over 1hr)',price:'\u00a340/hr'},{label:'Half Day (4hrs)',price:'\u00a3150',note:'Weekend only'},{label:'Full Day (8hrs)',price:'\u00a3300',note:'Weekend only',featured:true}].map(p=>(
+            {[{label:'Minimum Charge',price:'\u00a330'},{label:'Under An Hour',price:'\u00a330'},{label:'Per Hour (Over 1hr)',price:'\u00a340/hr'},{label:'Half Day (4hrs)',price:'\u00a3150',note:'Weekend only'},{label:'Full Day (8hrs)',price:'\u00a3300',note:'Weekend only',featured:true}].map(p=>(
               <div key={p.label} className={`pt-card${p.featured?' featured':''}`}>
                 {p.featured&&<div className="pt-badge">Best Value</div>}
                 <p className="pt-label">{p.label}</p>
