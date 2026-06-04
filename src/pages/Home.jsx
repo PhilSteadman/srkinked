@@ -33,7 +33,7 @@ export default function Home() {
       </section>
 
       <div className="stats-bar">
-        {[['500+','Tattoos Completed'],['5\u2605','Customer Rating'],['10+','Years Experience'],['Custom','Every Design']].map(([n,l],i)=>(
+        {[['500+','Tattoos Completed'],['5\u2605','Customer Rating'],['2+','Years Experience'],['Custom','Every Design']].map(([n,l],i)=>(
           <React.Fragment key={n}>{i>0&&<div className="stat-div"/>}<div className="stat"><span className="stat-num">{n}</span><span className="stat-label">{l}</span></div></React.Fragment>
         ))}
       </div>
