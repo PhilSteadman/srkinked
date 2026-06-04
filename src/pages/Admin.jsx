@@ -6,7 +6,8 @@ import AdminSlots from './AdminSlots'
 import AdminGallery from './AdminGallery'
 import AdminEvents from './AdminEvents'
 import AdminPosts from './AdminPosts'
-import {LayoutDashboard,Calendar,Clock,Image,CalendarDays,BookOpen,LogOut,Menu,X} from 'lucide-react'
+import AdminSettings from './AdminSettings'
+import {LayoutDashboard,Calendar,Clock,Image,CalendarDays,BookOpen,Settings,LogOut,Menu,X} from 'lucide-react'
 import './Admin.css'
 
 const TABS=[
@@ -16,6 +17,7 @@ const TABS=[
   {id:'gallery',label:'Gallery',icon:<Image size={16}/>},
   {id:'events',label:'Events',icon:<CalendarDays size={16}/>},
   {id:'posts',label:'Journal',icon:<BookOpen size={16}/>},
+  {id:'settings',label:'Site Settings',icon:<Settings size={16}/>},
 ]
 
 function Dashboard({stats}){
@@ -30,7 +32,9 @@ function Dashboard({stats}){
           </div>
         ))}
       </div>
-      <div className="dash-hint"><p>Use the sidebar to manage bookings, add available slots, upload gallery images, create events, and write journal posts.</p></div>
+      <div className="dash-hint">
+        <p>Use the sidebar to manage bookings, add available slots, upload gallery images, create events, write journal posts, and update site settings.</p>
+      </div>
     </div>
   )
 }
@@ -61,7 +65,15 @@ export default function Admin(){
   if(checking)return<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--black)'}}><p style={{color:'var(--muted)'}}>Loading...</p></div>
   if(!session)return<AdminLogin/>
 
-  const panels={dashboard:<Dashboard stats={stats}/>,bookings:<AdminBookings/>,slots:<AdminSlots/>,gallery:<AdminGallery/>,events:<AdminEvents/>,posts:<AdminPosts/>}
+  const panels={
+    dashboard:<Dashboard stats={stats}/>,
+    bookings:<AdminBookings/>,
+    slots:<AdminSlots/>,
+    gallery:<AdminGallery/>,
+    events:<AdminEvents/>,
+    posts:<AdminPosts/>,
+    settings:<AdminSettings/>,
+  }
 
   return(
     <div className="admin-layout">

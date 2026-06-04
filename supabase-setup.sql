@@ -118,3 +118,29 @@ create policy "products_auth_all" on products for all using (auth.role() = 'auth
 -- Supabase Dashboard > Authentication > Users > Invite User
 -- Enter your email to create the admin account.
 -- Sign in at yoursite.netlify.app/admin
+
+-- ============================================================
+-- SITE SETTINGS TABLE (add this if upgrading from v1)
+-- ============================================================
+create table if not exists site_settings (
+  id integer primary key default 1,
+  studio_photo_url text,
+  facebook_url text default 'https://www.facebook.com/srjinked',
+  instagram_url text default 'https://www.instagram.com/srjinked',
+  tiktok_url text default 'https://www.tiktok.com/@s.r.j.inked',
+  youtube_url text,
+  studio_address text default 'Bristol, UK',
+  contact_email text,
+  about_text text,
+  about_text_2 text,
+  updated_at timestamptz default now(),
+  constraint single_row check (id = 1)
+);
+
+-- Insert default row
+insert into site_settings (id) values (1) on conflict (id) do nothing;
+
+-- RLS
+alter table site_settings enable row level security;
+create policy "settings_public_read" on site_settings for select using (true);
+create policy "settings_auth_write" on site_settings for all using (auth.role() = 'authenticated');

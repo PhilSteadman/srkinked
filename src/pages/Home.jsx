@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronDown, Image } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { useSettings } from '../lib/useSettings'
 import './Home.css'
 
 const PH=Array.from({length:6},(_,i)=>({id:i+1,style:['Black & Grey','Realism','Traditional','Fine Line','Japanese','Geometric'][i],placeholder:true}))
@@ -9,6 +10,8 @@ const PH=Array.from({length:6},(_,i)=>({id:i+1,style:['Black & Grey','Realism','
 export default function Home() {
   const [gallery,setGallery]=useState(PH)
   const [events,setEvents]=useState([])
+  const { settings } = useSettings()
+
   useEffect(()=>{
     supabase.from('gallery').select('*').order('created_at',{ascending:false}).limit(6).then(({data})=>{if(data?.length)setGallery(data)})
     supabase.from('events').select('*').gte('event_date',new Date().toISOString().split('T')[0]).order('event_date').limit(3).then(({data})=>{if(data)setEvents(data)})
@@ -63,12 +66,19 @@ export default function Home() {
             <p className="section-eyebrow">The Artist</p>
             <h2 className="section-title">Crafting Stories <span>In Ink</span></h2>
             <div className="gold-line"/>
-            <p>Based in Bristol, SRJ Inked specialises in bespoke tattoo art across every style. Every tattoo is designed exclusively for you.</p>
-            <p style={{marginTop:'1rem'}}>Exceptional hygiene standards, premium inks, and a welcoming studio environment. Your comfort and confidence are the foundation of every session.</p>
+            <p>{settings.about_text}</p>
+            <p style={{marginTop:'1rem'}}>{settings.about_text_2}</p>
             <div className="about-styles">{['Black & Grey','Realism','Traditional','Fine Line','Japanese','Geometric'].map(s=><span key={s} className="tag">{s}</span>)}</div>
             <Link to="/booking" className="btn btn-gold" style={{marginTop:'2rem'}}>Start Your Journey</Link>
           </div>
-          <div className="about-img-wrap"><div className="about-img-border"/><div className="about-img-placeholder"><span>Studio Photo</span></div></div>
+          <div className="about-img-wrap">
+            <div className="about-img-border"/>
+            {settings.studio_photo_url ? (
+              <img src={settings.studio_photo_url} alt="Studio" className="about-img-real"/>
+            ) : (
+              <div className="about-img-placeholder"><span>Upload a studio photo in Admin \u2192 Site Settings</span></div>
+            )}
+          </div>
         </div>
       </section>
 
