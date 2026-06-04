@@ -3,7 +3,7 @@ import {Link} from 'react-router-dom'
 import {Check,Info} from 'lucide-react'
 import './Pricing.css'
 const TIERS=[
-  {label:'Minimum Charge',price:'\u00a320',desc:'For very small pieces or touch-ups.',features:['Any small design','Walk-ins welcome','Consultation included']},
+  {label:'Minimum Charge',price:'\u00a330',desc:'For very small pieces or touch-ups.',features:['Any small design','Walk-ins welcome','Consultation included']},
   {label:'Under An Hour',price:'\u00a330',desc:'Small-to-medium pieces in a single short session.',features:['Small to medium designs','Single session','Aftercare advice']},
   {label:'Per Hour',price:'\u00a340',sub:'per hour (over 1hr)',desc:'Larger custom work billed hourly. Ideal for sleeves and complex pieces.',features:['Any size or style','Custom design consultation','Progress photos','Aftercare pack'],featured:true},
   {label:'Half Day',price:'\u00a3150',sub:'4 hours \u00b7 Weekend only',desc:'Four uninterrupted hours for large-scale work. Weekends only.',features:['4 hours tattooing','Larger pieces & sleeves','Lunch break','Weekend only'],note:'Weekend Only'},
