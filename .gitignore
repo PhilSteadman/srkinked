@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Local Netlify state
+.netlify/
+
+# Environment files / secrets — never commit these
+.env
+.env.*
+!.env.example

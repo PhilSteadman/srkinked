@@ -2,6 +2,15 @@
   command = "npm run build"
   publish = "dist"
 
+  # These VITE_-prefixed variables are public client-side values that Vite
+  # intentionally inlines into the browser bundle (the Supabase anon key is
+  # protected by Row-Level Security, the project URL and YouTube key/channel
+  # are public identifiers). They are excluded from secrets scanning.
+  # RESEND_API_KEY is deliberately NOT listed here: it is a real secret used
+  # only server-side in the Netlify Function and must remain scanned.
+  [build.environment]
+    SECRETS_SCAN_OMIT_KEYS = "VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,VITE_YOUTUBE_API_KEY,VITE_YOUTUBE_CHANNEL_ID"
+
 [functions]
   directory = "netlify/functions"
 
