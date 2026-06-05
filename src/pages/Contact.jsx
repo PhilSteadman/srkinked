@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Instagram, Facebook, Youtube, Send, CheckCircle } from 'lucide-react'
+import { Instagram, Facebook, Youtube, Send, CheckCircle, AlertCircle } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useSettings } from '../lib/useSettings'
 import './Contact.css'
@@ -14,13 +14,28 @@ export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const { settings } = useSettings()
 
   const submit = async e => {
     e.preventDefault()
     setLoading(true)
-    await supabase.from('contact_messages').insert(form)
-    setSent(true)
+    setError('')
+    try {
+      // Save to Supabase for records
+      await supabase.from('contact_messages').insert(form)
+      // Send email via Netlify function
+      const res = await fetch('/.netlify/functions/send-contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      })
+      if (!res.ok) console.warn('Email function returned', res.status)
+      setSent(true)
+    } catch (err) {
+      console.error(err)
+      setError('Something went wrong. Please try again or message via Instagram.')
+    }
     setLoading(false)
   }
 
@@ -44,7 +59,6 @@ export default function Contact() {
           <h2 className="section-title" style={{ fontSize: '1.8rem' }}>Let's Talk <span>Ink</span></h2>
           <div className="gold-line" />
           <p className="contact-blurb">The best way to discuss your idea is via social media or the form. SRJ responds within 24–48 hours.</p>
-
           <div className="contact-socials">
             {socials.map(s => (
               <a key={s.platform} href={s.url} target="_blank" rel="noreferrer" className="social-link">
@@ -56,7 +70,6 @@ export default function Contact() {
               </a>
             ))}
           </div>
-
           <div className="contact-note">
             <p><strong>{settings.studio_address}</strong></p>
             <p>Exact studio location shared on booking confirmation.</p>
@@ -67,13 +80,15 @@ export default function Contact() {
             )}
           </div>
         </div>
-
         <div className="contact-form-wrap">
           {sent ? (
             <div className="contact-success">
               <CheckCircle size={48} strokeWidth={1} color="var(--gold)" />
               <h3>Message Sent!</h3>
               <p>Thanks {form.name}! SRJ will be in touch within 24–48 hours.</p>
+              <p style={{ fontSize: '.85rem', color: 'var(--muted)', marginTop: '.25rem' }}>
+                A confirmation has been sent to {form.email}.
+              </p>
               <button className="btn btn-outline" onClick={() => { setSent(false); setForm({ name: '', email: '', subject: '', message: '' }) }}>
                 Send Another
               </button>
@@ -81,6 +96,12 @@ export default function Contact() {
           ) : (
             <form onSubmit={submit} className="contact-form">
               <h3>Send a Message</h3>
+              {error && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '.75rem', padding: '.75rem 1rem', background: 'rgba(192,57,43,.1)', border: '1px solid rgba(192,57,43,.3)', marginBottom: '1rem' }}>
+                  <AlertCircle size={16} color="var(--red-bright)" />
+                  <p style={{ fontSize: '.85rem', color: 'var(--red-bright)' }}>{error}</p>
+                </div>
+              )}
               <div className="form-row">
                 <div className="form-group">
                   <label>Name *</label>
