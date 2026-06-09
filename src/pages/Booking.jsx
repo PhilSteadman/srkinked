@@ -75,6 +75,7 @@ export default function Booking() {
           {
             from_name:    form.name,
             from_email:   form.email,
+            to_email:     'srjinked@gmail.com',
             reply_to:     form.email,
             phone:        form.phone,
             tattoo_style: form.style || 'Not specified',
