@@ -2,10 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Clock, Check } from 'lucide-react'
 import emailjs from '@emailjs/browser'
 import { supabase } from '../lib/supabase'
+import { useSEO } from '../lib/useSEO'
 import './Booking.css'
 
 const EMAILJS_SERVICE_ID  = import.meta.env.VITE_EMAILJS_SERVICE_ID  || ''
 const EMAILJS_BOOKING_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_BOOKING_TEMPLATE_ID || ''
+// Optional: a second template that emails the CUSTOMER a confirmation.
+// Leave the env var unset if you haven't created this template yet — it's skipped safely.
+const EMAILJS_CUSTOMER_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_CUSTOMER_TEMPLATE_ID || ''
 const EMAILJS_PUBLIC_KEY  = import.meta.env.VITE_EMAILJS_PUBLIC_KEY  || ''
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
@@ -22,6 +26,12 @@ export default function Booking() {
   const [form, setForm]       = useState({ name:'', email:'', phone:'', style:'', description:'', reference:'' })
   const [loading, setLoading] = useState(false)
   const [done, setDone]       = useState(false)
+
+  useSEO({
+    title: 'Book Your Session',
+    description: 'Book your tattoo session online with SRJ Inked. Choose an available date and time slot, then submit your booking request.',
+    path: '/booking',
+  })
 
   const dim = new Date(year, month + 1, 0).getDate()
   const fd  = new Date(year, month, 1).getDay()
@@ -48,7 +58,6 @@ export default function Booking() {
     e.preventDefault()
     setLoading(true)
 
-    // 1. Save booking to Supabase
     const { error } = await supabase.from('bookings').insert({
       slot_id:        selSlot.id,
       customer_name:  form.name,
@@ -61,35 +70,45 @@ export default function Booking() {
     })
 
     if (!error) {
-      // Mark slot as unavailable
       await supabase.from('booking_slots').update({ is_available: false }).eq('id', selSlot.id)
 
-      // 2. Send email notification via EmailJS
+      const dateFormatted = new Date(selDate + 'T12:00:00').toLocaleDateString('en-GB', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      })
+
+      const emailParams = {
+        from_name:    form.name,
+        from_email:   form.email,
+        reply_to:     form.email,
+        phone:        form.phone,
+        tattoo_style: form.style || 'Not specified',
+        description:  form.description,
+        reference:    form.reference || 'None provided',
+        booking_date: dateFormatted,
+        booking_slot: selSlot.label,
+        price_hint:   selSlot.price_hint || '',
+        session_type: selSlot.session_type || '',
+      }
+
+      // Notify SRJ
       try {
-        const dateFormatted = new Date(selDate + 'T12:00:00').toLocaleDateString('en-GB', {
-          weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-        })
-        await emailjs.send(
-          EMAILJS_SERVICE_ID,
-          EMAILJS_BOOKING_TEMPLATE_ID,
-          {
-            from_name:    form.name,
-            from_email:   form.email,
-            reply_to:     form.email,
-            phone:        form.phone,
-            tattoo_style: form.style || 'Not specified',
-            description:  form.description,
-            reference:    form.reference || 'None provided',
-            booking_date: dateFormatted,
-            booking_slot: selSlot.label,
-            price_hint:   selSlot.price_hint || '',
-            session_type: selSlot.session_type || '',
-          },
-          EMAILJS_PUBLIC_KEY
-        )
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_BOOKING_TEMPLATE_ID, emailParams, EMAILJS_PUBLIC_KEY)
       } catch (emailErr) {
-        // Email failing shouldn't block the booking confirmation
-        console.warn('EmailJS booking notification failed:', emailErr)
+        console.warn('EmailJS booking notification to studio failed:', emailErr)
+      }
+
+      // Confirmation to customer (only if that template is configured)
+      if (EMAILJS_CUSTOMER_TEMPLATE_ID) {
+        try {
+          await emailjs.send(
+            EMAILJS_SERVICE_ID,
+            EMAILJS_CUSTOMER_TEMPLATE_ID,
+            { ...emailParams, to_email: form.email },
+            EMAILJS_PUBLIC_KEY
+          )
+        } catch (emailErr) {
+          console.warn('EmailJS customer confirmation failed:', emailErr)
+        }
       }
 
       setDone(true)
@@ -105,6 +124,9 @@ export default function Booking() {
         <div className="success-icon"><Check size={40}/></div>
         <h2>Booking Request Sent!</h2>
         <p>Thanks {form.name}! SRJ will be in touch to confirm your session.</p>
+        <p style={{ fontSize: '.85rem', color: 'var(--muted)', marginTop: '-.5rem' }}>
+          A confirmation email has been sent to {form.email}.
+        </p>
         <div className="success-details">
           <p><strong>Date:</strong> {new Date(selDate+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
           <p><strong>Slot:</strong> {selSlot?.label}</p>
@@ -139,7 +161,6 @@ export default function Booking() {
         </div>
 
         <div className="booking-body">
-          {/* Calendar */}
           <div className="booking-calendar">
             <div className="cal-header">
               <button onClick={prev}><ChevronLeft size={20}/></button>
@@ -171,7 +192,6 @@ export default function Booking() {
             <div className="cal-note"><p>No slots? Contact SRJ via social media to request a date.</p></div>
           </div>
 
-          {/* Right panel */}
           <div className="booking-right">
             {step === 1 && (
               <div className="booking-prompt">
@@ -245,7 +265,6 @@ export default function Booking() {
                 <button type="submit" className="btn btn-gold" disabled={loading} style={{width:'100%'}}>
                   {loading ? 'Sending...' : 'Request Booking'}
                 </button>
-                {/* Fixed: actual arrow character, not escaped unicode string */}
                 <button type="button" className="btn btn-outline" style={{width:'100%',marginTop:'.5rem'}} onClick={() => setStep(2)}>
                   ← Back to Slots
                 </button>

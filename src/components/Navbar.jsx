@@ -6,7 +6,7 @@ import './Navbar.css'
 const links = [
   {to:'/',label:'Home'},{to:'/gallery',label:'Gallery'},{to:'/booking',label:'Book Now'},
   {to:'/events',label:'Events'},{to:'/blog',label:'Journal'},{to:'/pricing',label:'Pricing'},
-  {to:'/videos',label:'Videos'},{to:'/contact',label:'Contact'},
+  {to:'/shop',label:'Shop'},{to:'/videos',label:'Videos'},{to:'/contact',label:'Contact'},
 ]
 
 export default function Navbar() {

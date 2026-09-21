@@ -12,6 +12,13 @@ const DEFAULTS = {
   contact_email: '',
   about_text: 'Based in Bristol, SRJ Inked specialises in bespoke tattoo art across every style. Every tattoo is designed exclusively for you.',
   about_text_2: 'Exceptional hygiene standards, premium inks, and a welcoming studio environment. Your comfort and confidence are the foundation of every session.',
+  price_minimum: '30',
+  price_under_hour: '30',
+  price_per_hour: '40',
+  price_half_day: '150',
+  price_full_day: '300',
+  years_experience: '2+',
+  tattoos_completed: '500+',
 }
 
 export default function AdminSettings() {
@@ -42,17 +49,11 @@ export default function AdminSettings() {
 
     const ext = file.name.split('.').pop()
     const path = `settings/studio-photo.${ext}`
-
-    // Remove old file first
     await supabase.storage.from('tattoos').remove([path])
-
-    const { error } = await supabase.storage.from('tattoos').upload(path, file, {
-      cacheControl: '3600', upsert: true
-    })
+    const { error } = await supabase.storage.from('tattoos').upload(path, file, { cacheControl: '3600', upsert: true })
     if (error) { alert('Upload failed: ' + error.message); setUploading(false); return }
 
     const { data: { publicUrl } } = supabase.storage.from('tattoos').getPublicUrl(path)
-    // Add cache buster so it refreshes
     const urlWithBust = `${publicUrl}?t=${Date.now()}`
     setSettings(s => ({ ...s, studio_photo_url: urlWithBust }))
     setPreview(urlWithBust)
@@ -61,7 +62,6 @@ export default function AdminSettings() {
 
   const handleSave = async () => {
     setSaving(true)
-    // Upsert with id=1 (single settings row)
     const { error } = await supabase.from('site_settings').upsert({
       id: 1,
       ...settings,
@@ -80,15 +80,10 @@ export default function AdminSettings() {
         <p style={{ fontSize: '.85rem', color: 'var(--muted)', marginBottom: '1.25rem' }}>
           This appears on the About section of the home page.
         </p>
-
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', alignItems: 'start' }}>
-          {/* Upload zone */}
           <div
             onClick={() => fileRef.current?.click()}
-            style={{
-              border: '2px dashed var(--border)', padding: '2rem', textAlign: 'center',
-              cursor: 'pointer', transition: 'border-color .2s', background: 'var(--surface)'
-            }}
+            style={{ border: '2px dashed var(--border)', padding: '2rem', textAlign: 'center', cursor: 'pointer', transition: 'border-color .2s', background: 'var(--surface)' }}
             onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--gold)'}
             onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
           >
@@ -99,8 +94,6 @@ export default function AdminSettings() {
             <p style={{ fontSize: '.75rem', color: 'var(--muted)' }}>JPG, PNG, WebP — recommended 800×1000px</p>
             <input ref={fileRef} type="file" accept="image/*" onChange={handlePhotoSelect} style={{ display: 'none' }} />
           </div>
-
-          {/* Preview */}
           <div style={{ aspectRatio: '4/5', background: 'var(--surface)', border: '1px solid var(--border)', overflow: 'hidden', position: 'relative' }}>
             {preview ? (
               <img src={preview} alt="Studio preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -113,29 +106,66 @@ export default function AdminSettings() {
         </div>
       </div>
 
+      {/* Pricing */}
+      <div className="admin-form-card">
+        <h3>Pricing</h3>
+        <p style={{ fontSize: '.85rem', color: 'var(--muted)', marginBottom: '1.25rem' }}>
+          Update rates shown on the home page and pricing page — no code changes needed.
+        </p>
+        <div className="admin-form-row" style={{ marginBottom: '1rem' }}>
+          <div className="form-group">
+            <label>Minimum Charge (£)</label>
+            <input type="number" value={settings.price_minimum} onChange={e => handleChange('price_minimum', e.target.value)} placeholder="30" />
+          </div>
+          <div className="form-group">
+            <label>Under An Hour (£)</label>
+            <input type="number" value={settings.price_under_hour} onChange={e => handleChange('price_under_hour', e.target.value)} placeholder="30" />
+          </div>
+          <div className="form-group">
+            <label>Per Hour, Over 1hr (£)</label>
+            <input type="number" value={settings.price_per_hour} onChange={e => handleChange('price_per_hour', e.target.value)} placeholder="40" />
+          </div>
+        </div>
+        <div className="admin-form-row">
+          <div className="form-group">
+            <label>Half Day, 4hrs (£)</label>
+            <input type="number" value={settings.price_half_day} onChange={e => handleChange('price_half_day', e.target.value)} placeholder="150" />
+          </div>
+          <div className="form-group">
+            <label>Full Day, 8hrs (£)</label>
+            <input type="number" value={settings.price_full_day} onChange={e => handleChange('price_full_day', e.target.value)} placeholder="300" />
+          </div>
+        </div>
+      </div>
+
+      {/* Studio Stats */}
+      <div className="admin-form-card">
+        <h3>Studio Stats</h3>
+        <p style={{ fontSize: '.85rem', color: 'var(--muted)', marginBottom: '1.25rem' }}>
+          Shown in the stats bar on the home page.
+        </p>
+        <div className="admin-form-row">
+          <div className="form-group">
+            <label>Years Experience</label>
+            <input value={settings.years_experience} onChange={e => handleChange('years_experience', e.target.value)} placeholder="2+" />
+          </div>
+          <div className="form-group">
+            <label>Tattoos Completed</label>
+            <input value={settings.tattoos_completed} onChange={e => handleChange('tattoos_completed', e.target.value)} placeholder="500+" />
+          </div>
+        </div>
+      </div>
+
       {/* About Text */}
       <div className="admin-form-card">
         <h3>About Text</h3>
-        <p style={{ fontSize: '.85rem', color: 'var(--muted)', marginBottom: '1.25rem' }}>
-          The two paragraphs shown in the About section on the home page.
-        </p>
         <div className="form-group">
           <label>First paragraph</label>
-          <textarea
-            rows={3}
-            value={settings.about_text}
-            onChange={e => handleChange('about_text', e.target.value)}
-            placeholder="Based in Bristol..."
-          />
+          <textarea rows={3} value={settings.about_text} onChange={e => handleChange('about_text', e.target.value)} placeholder="Based in Bristol..." />
         </div>
         <div className="form-group">
           <label>Second paragraph</label>
-          <textarea
-            rows={3}
-            value={settings.about_text_2}
-            onChange={e => handleChange('about_text_2', e.target.value)}
-            placeholder="Exceptional hygiene standards..."
-          />
+          <textarea rows={3} value={settings.about_text_2} onChange={e => handleChange('about_text_2', e.target.value)} placeholder="Exceptional hygiene standards..." />
         </div>
       </div>
 
@@ -145,51 +175,27 @@ export default function AdminSettings() {
         <p style={{ fontSize: '.85rem', color: 'var(--muted)', marginBottom: '1.25rem' }}>
           These appear in the navbar, footer, and contact page. Leave blank to hide.
         </p>
-
         <div className="admin-form-row">
           <div className="form-group">
-            <label style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-              <Facebook size={14} color="var(--gold)" /> Facebook URL
-            </label>
-            <input
-              value={settings.facebook_url}
-              onChange={e => handleChange('facebook_url', e.target.value)}
-              placeholder="https://www.facebook.com/yourpage"
-            />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Facebook size={14} color="var(--gold)" /> Facebook URL</label>
+            <input value={settings.facebook_url} onChange={e => handleChange('facebook_url', e.target.value)} placeholder="https://www.facebook.com/yourpage" />
           </div>
           <div className="form-group">
-            <label style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-              <Instagram size={14} color="var(--gold)" /> Instagram URL
-            </label>
-            <input
-              value={settings.instagram_url}
-              onChange={e => handleChange('instagram_url', e.target.value)}
-              placeholder="https://www.instagram.com/yourhandle"
-            />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Instagram size={14} color="var(--gold)" /> Instagram URL</label>
+            <input value={settings.instagram_url} onChange={e => handleChange('instagram_url', e.target.value)} placeholder="https://www.instagram.com/yourhandle" />
           </div>
         </div>
-
         <div className="admin-form-row">
           <div className="form-group">
             <label style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--gold)"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.31 6.31 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.74a4.85 4.85 0 01-1.01-.05z"/></svg>
               TikTok URL
             </label>
-            <input
-              value={settings.tiktok_url}
-              onChange={e => handleChange('tiktok_url', e.target.value)}
-              placeholder="https://www.tiktok.com/@yourhandle"
-            />
+            <input value={settings.tiktok_url} onChange={e => handleChange('tiktok_url', e.target.value)} placeholder="https://www.tiktok.com/@yourhandle" />
           </div>
           <div className="form-group">
-            <label style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
-              <Youtube size={14} color="var(--gold)" /> YouTube URL
-            </label>
-            <input
-              value={settings.youtube_url}
-              onChange={e => handleChange('youtube_url', e.target.value)}
-              placeholder="https://www.youtube.com/@yourchannel"
-            />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}><Youtube size={14} color="var(--gold)" /> YouTube URL</label>
+            <input value={settings.youtube_url} onChange={e => handleChange('youtube_url', e.target.value)} placeholder="https://www.youtube.com/@yourchannel" />
           </div>
         </div>
       </div>
@@ -200,43 +206,22 @@ export default function AdminSettings() {
         <div className="admin-form-row">
           <div className="form-group">
             <label>Studio Location (shown on contact page)</label>
-            <input
-              value={settings.studio_address}
-              onChange={e => handleChange('studio_address', e.target.value)}
-              placeholder="Bristol, UK"
-            />
+            <input value={settings.studio_address} onChange={e => handleChange('studio_address', e.target.value)} placeholder="Bristol, UK" />
           </div>
           <div className="form-group">
             <label>Contact Email (optional)</label>
-            <input
-              type="email"
-              value={settings.contact_email}
-              onChange={e => handleChange('contact_email', e.target.value)}
-              placeholder="studio@srjinked.com"
-            />
+            <input type="email" value={settings.contact_email} onChange={e => handleChange('contact_email', e.target.value)} placeholder="studio@srjinked.com" />
           </div>
         </div>
       </div>
 
-      {/* Save button */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <button
-          className="btn btn-gold"
-          onClick={handleSave}
-          disabled={saving || uploading}
-          style={{ minWidth: '160px' }}
-        >
+        <button className="btn btn-gold" onClick={handleSave} disabled={saving || uploading} style={{ minWidth: '160px' }}>
           <Save size={14} style={{ marginRight: '.5rem' }} />
           {saving ? 'Saving...' : 'Save All Settings'}
         </button>
-        {saved && (
-          <p style={{ color: '#2ecc71', fontSize: '.85rem', fontFamily: 'var(--font-display)', letterSpacing: '.1em' }}>
-            ✓ Settings saved
-          </p>
-        )}
-        {uploading && (
-          <p style={{ color: 'var(--gold)', fontSize: '.85rem' }}>Uploading photo...</p>
-        )}
+        {saved && <p style={{ color: '#2ecc71', fontSize: '.85rem', fontFamily: 'var(--font-display)', letterSpacing: '.1em' }}>✓ Settings saved</p>}
+        {uploading && <p style={{ color: 'var(--gold)', fontSize: '.85rem' }}>Uploading photo...</p>}
       </div>
     </div>
   )

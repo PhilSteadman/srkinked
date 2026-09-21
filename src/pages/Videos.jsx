@@ -1,5 +1,6 @@
 import React,{useState,useEffect} from 'react'
 import {Youtube,Play} from 'lucide-react'
+import {useSEO} from '../lib/useSEO'
 import './Videos.css'
 const YT_KEY=import.meta.env.VITE_YOUTUBE_API_KEY
 const YT_CH=import.meta.env.VITE_YOUTUBE_CHANNEL_ID
@@ -9,6 +10,7 @@ const DEMO=[
   {id:{videoId:'demo3'},snippet:{title:'Convention Highlights \u2013 Bristol 2024',description:'Clips from the Bristol Tattoo Convention.',publishedAt:'2024-12-15T10:00:00Z',thumbnails:{high:{url:null}}}},
 ]
 export default function Videos(){
+  useSEO({ title:'Videos', description:'Watch tattoo time-lapses, tutorials, and behind-the-scenes content from SRJ Inked.', path:'/videos' })
   const [videos,setVideos]=useState([])
   const [active,setActive]=useState(null)
   const [loading,setLoading]=useState(true)

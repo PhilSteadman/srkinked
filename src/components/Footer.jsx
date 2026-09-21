@@ -4,7 +4,7 @@ import { Instagram, Facebook, Youtube } from 'lucide-react'
 import { useSettings } from '../lib/useSettings'
 import './Footer.css'
 
-const nav=[['/',`Home`],['/gallery','Gallery'],['/booking','Book Now'],['/events','Events'],['/blog','Journal'],['/pricing','Pricing'],['/videos','Videos'],['/contact','Contact']]
+const nav=[['/',`Home`],['/gallery','Gallery'],['/booking','Book Now'],['/events','Events'],['/blog','Journal'],['/pricing','Pricing'],['/shop','Shop'],['/videos','Videos'],['/contact','Contact']]
 
 const TikTokIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -45,7 +45,7 @@ export default function Footer() {
         <div className="footer-nav">
           <h4>Info</h4>
           <Link to="/pricing">Pricing</Link>
-          <Link to="/contact">Aftercare Guide</Link>
+          <Link to="/aftercare">Aftercare Guide</Link>
           <Link to="/contact">FAQ</Link>
         </div>
         <div className="footer-contact">

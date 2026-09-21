@@ -3,19 +3,37 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronDown, Image } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useSettings } from '../lib/useSettings'
+import { useSEO } from '../lib/useSEO'
+import InstagramFeed from '../components/InstagramFeed'
 import './Home.css'
 
-const PH=Array.from({length:6},(_,i)=>({id:i+1,style:['Black & Grey','Realism','Traditional','Fine Line','Japanese','Geometric'][i],placeholder:true}))
+const PH = Array.from({length:6},(_,i)=>({id:i+1,style:['Black & Grey','Realism','Traditional','Fine Line','Japanese','Geometric'][i],placeholder:true}))
 
 export default function Home() {
-  const [gallery,setGallery]=useState(PH)
-  const [events,setEvents]=useState([])
+  const [gallery, setGallery] = useState(PH)
+  const [events, setEvents] = useState([])
   const { settings } = useSettings()
 
-  useEffect(()=>{
-    supabase.from('gallery').select('*').order('created_at',{ascending:false}).limit(6).then(({data})=>{if(data?.length)setGallery(data)})
-    supabase.from('events').select('*').gte('event_date',new Date().toISOString().split('T')[0]).order('event_date').limit(3).then(({data})=>{if(data)setEvents(data)})
-  },[])
+  useSEO({
+    title: null, // uses default site title on home
+    description: 'Bristol\'s custom tattoo studio. Book your session online, browse the gallery, and discover bespoke black & grey, realism, traditional and fine line tattoo art.',
+    path: '/',
+  })
+
+  useEffect(() => {
+    // Prefer featured images; fall back to most recent if none are marked featured
+    supabase.from('gallery').select('*').eq('featured', true).order('created_at', { ascending: false }).limit(6)
+      .then(({ data }) => {
+        if (data?.length) {
+          setGallery(data)
+        } else {
+          supabase.from('gallery').select('*').order('created_at', { ascending: false }).limit(6)
+            .then(({ data: recent }) => { if (recent?.length) setGallery(recent) })
+        }
+      })
+    supabase.from('events').select('*').gte('event_date', new Date().toISOString().split('T')[0]).order('event_date').limit(3)
+      .then(({ data }) => { if (data) setEvents(data) })
+  }, [])
 
   return (
     <div className="home page-enter">
@@ -36,8 +54,8 @@ export default function Home() {
       </section>
 
       <div className="stats-bar">
-        {[['500+','Tattoos Completed'],['5\u2605','Customer Rating'],['2+','Years Experience'],['Custom','Every Design']].map(([n,l],i)=>(
-          <React.Fragment key={n}>{i>0&&<div className="stat-div"/>}<div className="stat"><span className="stat-num">{n}</span><span className="stat-label">{l}</span></div></React.Fragment>
+        {[[settings.tattoos_completed,'Tattoos Completed'],['5\u2605','Customer Rating'],[settings.years_experience,'Years Experience'],['Custom','Every Design']].map(([n,l],i)=>(
+          <React.Fragment key={l}>{i>0&&<div className="stat-div"/>}<div className="stat"><span className="stat-num">{n}</span><span className="stat-label">{l}</span></div></React.Fragment>
         ))}
       </div>
 
@@ -49,12 +67,12 @@ export default function Home() {
           </div>
           <div className="gallery-grid">
             {gallery.map((item,i)=>(
-              <div key={item.id||i} className="gallery-card" style={{animationDelay:`${i*.1}s`}}>
+              <Link to={item.style ? `/gallery?style=${encodeURIComponent(item.style)}` : '/gallery'} key={item.id||i} className="gallery-card" style={{animationDelay:`${i*.1}s`}}>
                 <div className="gallery-img">
                   {item.image_url?<img src={item.image_url} alt={item.title}/>:<div className="gallery-placeholder"><Image size={32} strokeWidth={1}/><span>{item.style}</span></div>}
                   <div className="gallery-overlay"><p className="gallery-style">{item.style}</p><p className="gallery-title">{item.title||item.style}</p></div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -90,7 +108,13 @@ export default function Home() {
             <div className="gold-line" style={{margin:'1rem auto 2rem'}}/>
           </div>
           <div className="pt-cards">
-            {[{label:'Minimum Charge',price:'\u00a330'},{label:'Under An Hour',price:'\u00a330'},{label:'Per Hour (Over 1hr)',price:'\u00a340/hr'},{label:'Half Day (4hrs)',price:'\u00a3150',note:'Weekend only'},{label:'Full Day (8hrs)',price:'\u00a3300',note:'Weekend only',featured:true}].map(p=>(
+            {[
+              {label:'Minimum Charge',price:`£${settings.price_minimum}`},
+              {label:'Under An Hour',price:`£${settings.price_under_hour}`},
+              {label:'Per Hour (Over 1hr)',price:`£${settings.price_per_hour}/hr`},
+              {label:'Half Day (4hrs)',price:`£${settings.price_half_day}`,note:'Weekend only'},
+              {label:'Full Day (8hrs)',price:`£${settings.price_full_day}`,note:'Weekend only',featured:true},
+            ].map(p=>(
               <div key={p.label} className={`pt-card${p.featured?' featured':''}`}>
                 {p.featured&&<div className="pt-badge">Best Value</div>}
                 <p className="pt-label">{p.label}</p>
@@ -120,6 +144,8 @@ export default function Home() {
           </div>
         </div></section>
       )}
+
+      <InstagramFeed />
 
       <section className="cta-banner">
         <div className="cta-inner">

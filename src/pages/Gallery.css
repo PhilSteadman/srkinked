@@ -17,3 +17,18 @@
 .lb-info p{color:var(--muted);font-size:.9rem;margin-top:.25rem}
 @media(max-width:900px){.gallery-masonry{columns:2}}
 @media(max-width:500px){.gallery-masonry{columns:1}}
+
+.gm-featured-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  background: var(--gold);
+  color: var(--black);
+  font-family: var(--font-display);
+  font-size: .58rem;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  padding: .25rem .6rem;
+  font-weight: 600;
+}

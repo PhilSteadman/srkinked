@@ -11,11 +11,14 @@ import BlogPost from './pages/BlogPost'
 import Videos from './pages/Videos'
 import Pricing from './pages/Pricing'
 import Contact from './pages/Contact'
+import Aftercare from './pages/Aftercare'
+import Shop from './pages/Shop'
 import Admin from './pages/Admin'
 
 function Layout({ children }) {
   return <><Navbar/><main>{children}</main><Footer/></>
 }
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -29,6 +32,8 @@ export default function App() {
         <Route path="/blog/:slug" element={<Layout><BlogPost/></Layout>}/>
         <Route path="/videos" element={<Layout><Videos/></Layout>}/>
         <Route path="/pricing" element={<Layout><Pricing/></Layout>}/>
+        <Route path="/aftercare" element={<Layout><Aftercare/></Layout>}/>
+        <Route path="/shop" element={<Layout><Shop/></Layout>}/>
         <Route path="/contact" element={<Layout><Contact/></Layout>}/>
         <Route path="*" element={<Layout><div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:'1rem',paddingTop:'100px'}}><h1 style={{fontFamily:'var(--font-hero)',fontSize:'8rem',color:'var(--gold)',lineHeight:1}}>404</h1><p style={{color:'var(--muted)'}}>Page not found.</p><a href="/" className="btn btn-outline">Go Home</a></div></Layout>}/>
       </Routes>

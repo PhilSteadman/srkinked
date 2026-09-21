@@ -1,6 +1,7 @@
 import React,{useState,useEffect} from 'react'
 import {MapPin,Calendar,ExternalLink} from 'lucide-react'
 import {supabase} from '../lib/supabase'
+import {useSEO} from '../lib/useSEO'
 import './Events.css'
 const DEMO=[
   {id:1,title:'Bristol Tattoo Convention',event_date:'2025-03-15',location:'Ashton Gate, Bristol',description:'SRJ Inked exhibiting all weekend. Walk-in slots available \u2014 come get tattooed live at the show!',booking_link:null},
@@ -19,6 +20,7 @@ function EventCard({event,isPast}){
   )
 }
 export default function Events(){
+  useSEO({ title:'Events & Pop-Ups', description:'Upcoming tattoo conventions, guest spots, and pop-up sessions from SRJ Inked.', path:'/events' })
   const [upcoming,setUpcoming]=useState([])
   const [past,setPast]=useState([])
   useEffect(()=>{

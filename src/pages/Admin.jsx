@@ -7,7 +7,8 @@ import AdminGallery from './AdminGallery'
 import AdminEvents from './AdminEvents'
 import AdminPosts from './AdminPosts'
 import AdminSettings from './AdminSettings'
-import {LayoutDashboard,Calendar,Clock,Image,CalendarDays,BookOpen,Settings,LogOut,Menu,X} from 'lucide-react'
+import AdminShop from './AdminShop'
+import {LayoutDashboard,Calendar,Clock,Image,CalendarDays,BookOpen,Settings,ShoppingBag,LogOut,Menu,X,Check,Ban} from 'lucide-react'
 import './Admin.css'
 
 const TABS=[
@@ -17,10 +18,11 @@ const TABS=[
   {id:'gallery',label:'Gallery',icon:<Image size={16}/>},
   {id:'events',label:'Events',icon:<CalendarDays size={16}/>},
   {id:'posts',label:'Journal',icon:<BookOpen size={16}/>},
+  {id:'shop',label:'Shop',icon:<ShoppingBag size={16}/>},
   {id:'settings',label:'Site Settings',icon:<Settings size={16}/>},
 ]
 
-function Dashboard({stats}){
+function Dashboard({stats, pendingBookings, onNavigate, onQuickAction}){
   return(
     <div>
       <p className="admin-section-title">Dashboard</p>
@@ -32,8 +34,41 @@ function Dashboard({stats}){
           </div>
         ))}
       </div>
+
+      {pendingBookings.length > 0 && (
+        <div style={{ marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <p className="admin-section-title" style={{ marginBottom: 0 }}>
+              Needs Your Attention
+            </p>
+            <button className="admin-action-btn" onClick={() => onNavigate('bookings')}>View All Bookings</button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--border)' }}>
+            {pendingBookings.slice(0, 5).map(b => (
+              <div key={b.id} style={{ background: 'var(--dark)', padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1.5rem', borderLeft: '3px solid var(--gold)' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontFamily: 'var(--font-display)', fontWeight: 600, marginBottom: '.2rem' }}>{b.customer_name}</p>
+                  <p style={{ fontSize: '.8rem', color: 'var(--gold)' }}>
+                    {b.booking_slots?.slot_date} · {b.booking_slots?.label}
+                  </p>
+                  <p style={{ fontSize: '.78rem', color: 'var(--muted)', marginTop: '.15rem' }}>
+                    {b.tattoo_style || 'Style not specified'}
+                  </p>
+                </div>
+                <button className="admin-action-btn" onClick={() => onQuickAction(b.id, 'confirmed')} style={{ color: '#2ecc71', borderColor: '#2ecc71', display: 'flex', alignItems: 'center', gap: '.4rem' }}>
+                  <Check size={13} /> Confirm
+                </button>
+                <button className="admin-action-btn" onClick={() => onQuickAction(b.id, 'cancelled')} style={{ color: 'var(--red-bright)', borderColor: 'var(--red-bright)', display: 'flex', alignItems: 'center', gap: '.4rem' }}>
+                  <Ban size={13} /> Decline
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="dash-hint">
-        <p>Use the sidebar to manage bookings, add available slots, upload gallery images, create events, write journal posts, and update site settings.</p>
+        <p>Use the sidebar to manage bookings, add available slots, upload gallery images, create events, write journal posts, manage the shop, and update site settings.</p>
       </div>
     </div>
   )
@@ -43,6 +78,7 @@ export default function Admin(){
   const [session,setSession]=useState(null)
   const [tab,setTab]=useState('dashboard')
   const [stats,setStats]=useState({})
+  const [pendingBookings, setPendingBookings] = useState([])
   const [open,setOpen]=useState(false)
   const [checking,setChecking]=useState(true)
 
@@ -52,26 +88,38 @@ export default function Admin(){
     return()=>subscription.unsubscribe()
   },[])
 
-  useEffect(()=>{
+  const loadDashboardData = () => {
     if(!session)return
     Promise.all([
       supabase.from('bookings').select('id',{count:'exact',head:true}).eq('status','pending'),
       supabase.from('bookings').select('id',{count:'exact',head:true}).eq('status','confirmed'),
       supabase.from('gallery').select('id',{count:'exact',head:true}),
       supabase.from('booking_slots').select('id',{count:'exact',head:true}).eq('is_available',true),
-    ]).then(([p,c,g,s])=>setStats({pending:p.count,confirmed:c.count,gallery:g.count,slots:s.count}))
-  },[session,tab])
+      supabase.from('bookings').select('*,booking_slots(slot_date,label)').eq('status','pending').order('created_at',{ascending:false}),
+    ]).then(([p,c,g,s,pending])=>{
+      setStats({pending:p.count,confirmed:c.count,gallery:g.count,slots:s.count})
+      setPendingBookings(pending.data || [])
+    })
+  }
+
+  useEffect(loadDashboardData,[session,tab])
+
+  const quickAction = async (id, status) => {
+    await supabase.from('bookings').update({ status }).eq('id', id)
+    loadDashboardData()
+  }
 
   if(checking)return<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--black)'}}><p style={{color:'var(--muted)'}}>Loading...</p></div>
   if(!session)return<AdminLogin/>
 
   const panels={
-    dashboard:<Dashboard stats={stats}/>,
+    dashboard:<Dashboard stats={stats} pendingBookings={pendingBookings} onNavigate={setTab} onQuickAction={quickAction}/>,
     bookings:<AdminBookings/>,
     slots:<AdminSlots/>,
     gallery:<AdminGallery/>,
     events:<AdminEvents/>,
     posts:<AdminPosts/>,
+    shop:<AdminShop/>,
     settings:<AdminSettings/>,
   }
 

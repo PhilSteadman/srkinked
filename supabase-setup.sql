@@ -144,3 +144,23 @@ insert into site_settings (id) values (1) on conflict (id) do nothing;
 alter table site_settings enable row level security;
 create policy "settings_public_read" on site_settings for select using (true);
 create policy "settings_auth_write" on site_settings for all using (auth.role() = 'authenticated');
+
+-- ============================================================
+-- BIG UPDATE — new columns and tables
+-- Run this if upgrading from an earlier version
+-- ============================================================
+
+-- Gallery: featured flag for home page curation
+alter table gallery add column if not exists featured boolean default false;
+
+-- Site settings: pricing and stats fields (safe if already run before)
+alter table site_settings add column if not exists price_minimum text default '30';
+alter table site_settings add column if not exists price_under_hour text default '30';
+alter table site_settings add column if not exists price_per_hour text default '40';
+alter table site_settings add column if not exists price_half_day text default '150';
+alter table site_settings add column if not exists price_full_day text default '300';
+alter table site_settings add column if not exists years_experience text default '2+';
+alter table site_settings add column if not exists tattoos_completed text default '500+';
+
+-- Products table already exists from earlier setup — just confirming RLS is right
+-- (products table + policies were created in the original supabase-setup.sql above)

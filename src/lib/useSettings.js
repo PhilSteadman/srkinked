@@ -11,6 +11,13 @@ const DEFAULTS = {
   contact_email: '',
   about_text: 'Based in Bristol, SRJ Inked specialises in bespoke tattoo art across every style. Every tattoo is designed exclusively for you.',
   about_text_2: 'Exceptional hygiene standards, premium inks, and a welcoming studio environment. Your comfort and confidence are the foundation of every session.',
+  price_minimum: '30',
+  price_under_hour: '30',
+  price_per_hour: '40',
+  price_half_day: '150',
+  price_full_day: '300',
+  years_experience: '2+',
+  tattoos_completed: '500+',
 }
 
 export function useSettings() {

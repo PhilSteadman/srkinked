@@ -3,6 +3,7 @@ import { Instagram, Facebook, Youtube, Send, CheckCircle, AlertCircle } from 'lu
 import emailjs from '@emailjs/browser'
 import { supabase } from '../lib/supabase'
 import { useSettings } from '../lib/useSettings'
+import { useSEO } from '../lib/useSEO'
 import './Contact.css'
 
 // ─── EmailJS config ───────────────────────────────────────────────────────────
@@ -19,6 +20,7 @@ const TikTokIcon = () => (
 )
 
 export default function Contact() {
+  useSEO({ title:'Contact', description:'Get in touch with SRJ Inked. Message on Instagram, Facebook, or use the contact form.', path:'/contact' })
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
