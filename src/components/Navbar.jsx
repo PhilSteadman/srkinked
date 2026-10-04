@@ -1,99 +1,69 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import './Navbar.css'
 
 const links = [
-  {to:'/',label:'Home'},{to:'/gallery',label:'Gallery'},{to:'/booking',label:'Book Now'},
-  {to:'/events',label:'Events'},{to:'/blog',label:'Journal'},{to:'/pricing',label:'Pricing'},
-  {to:'/shop',label:'Shop'},{to:'/videos',label:'Videos'},{to:'/contact',label:'Contact'},
+  { to: '/gallery', label: 'Work' },
+  { to: '/flash', label: 'Flash' },
+  { to: '/pricing', label: 'Pricing' },
+  { to: '/blog', label: 'Journal' },
+  { to: '/events', label: 'Events' },
+  { to: '/shop', label: 'Shop' },
+  { to: '/contact', label: 'Contact' },
 ]
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const loc = useLocation()
+  const overHero = loc.pathname === '/' && !scrolled
 
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 60)
+    const fn = () => setScrolled(window.scrollY > 40)
+    fn()
     window.addEventListener('scroll', fn, { passive: true })
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
-  // Close menu on route change
-  useEffect(() => {
-    setOpen(false)
-  }, [loc])
+  useEffect(() => { setOpen(false); window.scrollTo(0, 0) }, [loc.pathname])
 
-  // Lock body scroll when menu is open
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
+    const onKey = e => { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => { document.body.style.overflow = ''; window.removeEventListener('keydown', onKey) }
   }, [open])
 
   return (
     <>
-      <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
-        <div className="navbar-inner">
-          <Link to="/" className="navbar-logo">
-            <img src="/logo-gold.png" alt="SRJ Inked" className="navbar-logo-img"/>
+      <header className={`nav ${overHero ? 'nav--clear' : 'nav--solid'}`}>
+        <div className="nav-inner">
+          <Link to="/" className="nav-logo" aria-label="SRJ Inked home">
+            <img src="/logo-gold.png" alt="" width="243" height="175" />
           </Link>
-          <ul className="navbar-links">
+          <nav className="nav-links" aria-label="Main">
             {links.map(l => (
-              <li key={l.to}>
-                <Link to={l.to} className={loc.pathname === l.to ? 'active' : ''}>{l.label}</Link>
-              </li>
+              <NavLink key={l.to} to={l.to} className={({ isActive }) => isActive ? 'is-active' : ''}>{l.label}</NavLink>
             ))}
-          </ul>
-          <Link to="/booking" className="btn btn-gold navbar-cta">Book Now</Link>
-          <button
-            className="navbar-hamburger"
-            onClick={() => setOpen(o => !o)}
-            aria-label={open ? 'Close menu' : 'Open menu'}
-            aria-expanded={open}
-          >
-            {open ? <X size={24}/> : <Menu size={24}/>}
+          </nav>
+          <Link to="/booking" className="btn btn-gold nav-cta">Book a session</Link>
+          <button className="nav-toggle" onClick={() => setOpen(o => !o)} aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open}>
+            {open ? <X size={26} /> : <Menu size={26} />}
           </button>
         </div>
-      </nav>
+      </header>
 
-      {/* Mobile menu rendered outside nav so it can't affect navbar layout */}
-      <div className={`mobile-menu ${open ? 'open' : ''}`} aria-hidden={!open}>
-        <div className="mobile-logo-wrap">
-          <img src="/logo-gold.png" alt="SRJ Inked" className="mobile-logo-img"/>
-        </div>
-        {links.map(l => (
-          <Link
-            key={l.to}
-            to={l.to}
-            className={loc.pathname === l.to ? 'active' : ''}
-            onClick={() => setOpen(false)}
-          >
-            {l.label}
-          </Link>
-        ))}
-        <Link
-          to="/booking"
-          className="btn btn-gold"
-          style={{marginTop:'1rem', textAlign:'center'}}
-          onClick={() => setOpen(false)}
-        >
-          Book Now
-        </Link>
+      <div className={`nav-sheet ${open ? 'is-open' : ''}`} aria-hidden={!open}>
+        <nav aria-label="Mobile">
+          <NavLink to="/" end className={({ isActive }) => isActive ? 'is-active' : ''} tabIndex={open ? 0 : -1}>Home</NavLink>
+          {links.map(l => (
+            <NavLink key={l.to} to={l.to} className={({ isActive }) => isActive ? 'is-active' : ''} tabIndex={open ? 0 : -1}>{l.label}</NavLink>
+          ))}
+          <NavLink to="/aftercare" tabIndex={open ? 0 : -1}>Aftercare</NavLink>
+        </nav>
+        <Link to="/booking" className="btn btn-gold nav-sheet-cta" tabIndex={open ? 0 : -1}>Book a session</Link>
       </div>
-
-      {/* Backdrop — tap outside to close */}
-      {open && (
-        <div
-          onClick={() => setOpen(false)}
-          style={{
-            position:'fixed', inset:0, zIndex:998,
-            background:'rgba(0,0,0,0.5)',
-            backdropFilter:'blur(2px)',
-          }}
-          aria-hidden="true"
-        />
-      )}
     </>
   )
 }

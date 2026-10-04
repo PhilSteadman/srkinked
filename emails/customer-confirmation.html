@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Your booking request — SRJ Inked</title></head>
+<body style="font-family:Georgia,'Times New Roman',serif;background-color:#100E0C;margin:0;padding:32px 16px;">
+  <div style="max-width:600px;margin:0 auto;background:#1A1714;border:1px solid #34302A;">
+
+    <div style="background:#100E0C;padding:28px 32px;border-bottom:3px solid #C9A84C;text-align:center;">
+      <p style="font-family:Impact,'Arial Narrow',sans-serif;font-size:30px;letter-spacing:2px;color:#ECE5D8;text-transform:uppercase;margin:0;">SRJ <span style="color:#C9A84C;">Inked</span></p>
+      <p style="font-size:14px;font-style:italic;color:#9C9489;margin:6px 0 0;">Where your story meets the canvas</p>
+    </div>
+
+    <div style="padding:32px;color:#ECE5D8;">
+      <p style="font-size:18px;line-height:1.6;margin:0 0 16px;">Hi {{from_name}},</p>
+      <p style="font-size:16px;line-height:1.7;color:#C8C1B4;margin:0 0 24px;">Thanks for your booking request. Your slot is being held while it's confirmed. Here's what you asked for:</p>
+
+      <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+        <tr>
+          <td style="padding:12px 0;border-top:1px solid #34302A;color:#9C9489;font-size:14px;width:110px;">Date</td>
+          <td style="padding:12px 0;border-top:1px solid #34302A;color:#C9A84C;font-size:17px;font-weight:bold;">{{booking_date}}</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 0;border-top:1px solid #34302A;color:#9C9489;font-size:14px;">Time</td>
+          <td style="padding:12px 0;border-top:1px solid #34302A;color:#ECE5D8;font-size:17px;">{{booking_slot}}</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 0;border-top:1px solid #34302A;border-bottom:1px solid #34302A;color:#9C9489;font-size:14px;">Deposit</td>
+          <td style="padding:12px 0;border-top:1px solid #34302A;border-bottom:1px solid #34302A;color:#ECE5D8;font-size:17px;">{{deposit_amount}}</td>
+        </tr>
+      </table>
+
+      <p style="font-size:16px;line-height:1.7;color:#ECE5D8;margin:0 0 8px;font-weight:bold;">What happens next</p>
+      <ol style="font-size:16px;line-height:1.8;color:#C8C1B4;margin:0 0 28px;padding-left:20px;">
+        <li>Pay your deposit to lock the slot in. The button on your booking page takes you straight there.</li>
+        <li>You'll get a confirmation once it's in.</li>
+        <li>Bring photo ID on the day, eat beforehand, and avoid alcohol for 24 hours.</li>
+      </ol>
+
+      <div style="text-align:center;margin:0 0 12px;">
+        <a href="{{manage_link}}" style="display:inline-block;background:#C9A84C;color:#100E0C;padding:15px 34px;font-family:Impact,'Arial Narrow',sans-serif;font-size:17px;letter-spacing:1px;text-transform:uppercase;text-decoration:none;">View your booking</a>
+      </div>
+      <p style="text-align:center;font-size:13px;color:#9C9489;margin:0;">Pay your deposit, check the status, or cancel from this page.</p>
+    </div>
+
+    <div style="background:#100E0C;border-top:1px solid #34302A;padding:18px 32px;text-align:center;">
+      <p style="font-size:13px;color:#9C9489;margin:0;">Questions? Just reply to this email.</p>
+      <p style="font-size:13px;margin:8px 0 0;">
+        <a href="https://instagram.com/srjinked" style="color:#C9A84C;text-decoration:none;margin:0 8px;">Instagram</a>
+        <a href="https://facebook.com/srjinked" style="color:#C9A84C;text-decoration:none;margin:0 8px;">Facebook</a>
+        <a href="https://tiktok.com/@s.r.j.inked" style="color:#C9A84C;text-decoration:none;margin:0 8px;">TikTok</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

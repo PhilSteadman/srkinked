@@ -1,0 +1,5 @@
+.social-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.social-tile { aspect-ratio: 1; overflow: hidden; background: var(--ink-2); display: block; }
+.social-tile img { width: 100%; height: 100%; object-fit: cover; transition: transform .5s; }
+a.social-tile:hover img { transform: scale(1.05); }
+@media (max-width: 860px) { .social-grid { grid-template-columns: repeat(3, 1fr); } }

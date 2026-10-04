@@ -1,277 +1,394 @@
-import React, { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, Clock, Check } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { ChevronLeft, ChevronRight, Check, CalendarPlus, ImagePlus, X } from 'lucide-react'
 import emailjs from '@emailjs/browser'
 import { supabase } from '../lib/supabase'
+import { useSettings } from '../lib/useSettings'
 import { useSEO } from '../lib/useSEO'
+import { uploadImage } from '../lib/images'
+import { fmtLong, todayISO, lastDayOfMonth, buildICS } from '../lib/dates'
 import './Booking.css'
 
-const EMAILJS_SERVICE_ID  = import.meta.env.VITE_EMAILJS_SERVICE_ID  || ''
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || ''
 const EMAILJS_BOOKING_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_BOOKING_TEMPLATE_ID || ''
-// Optional: a second template that emails the CUSTOMER a confirmation.
-// Leave the env var unset if you haven't created this template yet — it's skipped safely.
 const EMAILJS_CUSTOMER_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_CUSTOMER_TEMPLATE_ID || ''
-const EMAILJS_PUBLIC_KEY  = import.meta.env.VITE_EMAILJS_PUBLIC_KEY  || ''
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || ''
 
-const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
-const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const STYLES = ['Black & Grey', 'Realism', 'Fine Line', 'Traditional', 'Neo-Traditional', 'Japanese', 'Geometric', 'Lettering', 'Watercolour', 'Cover-up', 'Not sure yet']
+const EMPTY = { name: '', email: '', phone: '', style: '', description: '', reference: '', age: false }
 
 export default function Booking() {
+  const { settings } = useSettings()
+  const [params] = useSearchParams()
   const today = new Date()
-  const [year, setYear]       = useState(today.getFullYear())
-  const [month, setMonth]     = useState(today.getMonth())
+  const [year, setYear] = useState(today.getFullYear())
+  const [month, setMonth] = useState(today.getMonth())
+  const [slots, setSlots] = useState({})
+  const [loadingSlots, setLoadingSlots] = useState(true)
   const [selDate, setSelDate] = useState(null)
-  const [slots, setSlots]     = useState({})
   const [selSlot, setSelSlot] = useState(null)
-  const [step, setStep]       = useState(1)
-  const [form, setForm]       = useState({ name:'', email:'', phone:'', style:'', description:'', reference:'' })
-  const [loading, setLoading] = useState(false)
-  const [done, setDone]       = useState(false)
+  const [flash, setFlash] = useState(null)
+  const [form, setForm] = useState(EMPTY)
+  const [refFile, setRefFile] = useState(null)
+  const [refPreview, setRefPreview] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [done, setDone] = useState(null)
+  const [reload, setReload] = useState(0)
+  const detailsRef = useRef(null)
+  const slotsRef = useRef(null)
+  const fileRef = useRef(null)
 
-  useSEO({
-    title: 'Book Your Session',
-    description: 'Book your tattoo session online with SRJ Inked. Choose an available date and time slot, then submit your booking request.',
-    path: '/booking',
-  })
+  useSEO({ title: 'Book a session', description: 'Pick a date and time, tell me your idea, and secure your tattoo session with SRJ Inked.', path: '/booking' })
 
-  const dim = new Date(year, month + 1, 0).getDate()
-  const fd  = new Date(year, month, 1).getDay()
-  const ds  = d => `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
-
+  // Flash design chosen from the flash page
   useEffect(() => {
-    const from = `${year}-${String(month+1).padStart(2,'0')}-01`
-    const to   = `${year}-${String(month+1).padStart(2,'0')}-${dim}`
-    supabase.from('booking_slots').select('*')
-      .gte('slot_date', from).lte('slot_date', to).eq('is_available', true)
+    const id = params.get('flash')
+    if (!id) return
+    supabase.from('flash').select('*').eq('id', id).maybeSingle().then(({ data }) => {
+      if (data && data.available) {
+        setFlash(data)
+        setForm(f => ({ ...f, description: f.description || `Flash design: ${data.title}${data.size ? ` (${data.size})` : ''}` }))
+      }
+    })
+  }, [params])
+
+  // Available slots for the month on screen
+  useEffect(() => {
+    setLoadingSlots(true)
+    const mm = String(month + 1).padStart(2, '0')
+    const from = `${year}-${mm}-01`
+    const to = `${year}-${mm}-${String(lastDayOfMonth(year, month + 1)).padStart(2, '0')}`
+    supabase.from('booking_slots').select('*').gte('slot_date', from).lte('slot_date', to).eq('is_available', true).order('slot_date')
       .then(({ data }) => {
-        if (data) {
-          const m = {}
-          data.forEach(s => { if (!m[s.slot_date]) m[s.slot_date] = []; m[s.slot_date].push(s) })
-          setSlots(m)
+        const map = {}
+        ;(data || []).forEach(s => { (map[s.slot_date] = map[s.slot_date] || []).push(s) })
+        setSlots(map)
+        setLoadingSlots(false)
+      })
+  }, [year, month, reload])
+
+  // If this month has nothing left, jump to the first month that does (once, on first load)
+  const jumped = useRef(false)
+  useEffect(() => {
+    if (jumped.current || loadingSlots) return
+    jumped.current = true
+    const anyFuture = Object.keys(slots).some(d => d >= todayISO())
+    if (anyFuture) return
+    supabase.from('booking_slots').select('slot_date').eq('is_available', true).gte('slot_date', todayISO()).order('slot_date').limit(1)
+      .then(({ data }) => {
+        if (data?.[0]) {
+          const d = new Date(data[0].slot_date + 'T12:00:00')
+          setYear(d.getFullYear()); setMonth(d.getMonth())
         }
       })
-  }, [year, month])
+  }, [loadingSlots, slots])
 
-  const prev = () => { if (month === 0) { setMonth(11); setYear(y => y-1) } else setMonth(m => m-1); setSelDate(null); setSelSlot(null) }
-  const next = () => { if (month === 11) { setMonth(0); setYear(y => y+1) } else setMonth(m => m+1); setSelDate(null); setSelSlot(null) }
+  const changeMonth = delta => {
+    const d = new Date(year, month + delta, 1)
+    setYear(d.getFullYear()); setMonth(d.getMonth())
+    setSelDate(null); setSelSlot(null)
+  }
+  const isPastMonth = year < today.getFullYear() || (year === today.getFullYear() && month <= today.getMonth())
+
+  const pickDate = ds => {
+    setSelDate(ds); setSelSlot(null); setError('')
+    setTimeout(() => slotsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
+  }
+  const pickSlot = slot => {
+    setSelSlot(slot); setError('')
+    setTimeout(() => detailsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)
+  }
+
+  const onRefFile = e => {
+    const f = e.target.files?.[0]
+    if (!f) return
+    if (!f.type.startsWith('image/')) { setError('Reference photos need to be an image (JPG, PNG or WebP).'); return }
+    setRefFile(f)
+    setRefPreview(URL.createObjectURL(f))
+  }
+  const clearRef = () => { setRefFile(null); setRefPreview(null); if (fileRef.current) fileRef.current.value = '' }
 
   const submit = async e => {
     e.preventDefault()
-    setLoading(true)
+    if (!form.age) { setError('Tick the box to confirm you are 18 or over.'); return }
+    setSubmitting(true); setError('')
 
-    const { error } = await supabase.from('bookings').insert({
-      slot_id:        selSlot.id,
-      customer_name:  form.name,
-      customer_email: form.email,
-      customer_phone: form.phone,
-      tattoo_style:   form.style,
-      description:    form.description,
-      reference_info: form.reference,
-      status:         'pending'
-    })
-
-    if (!error) {
-      await supabase.from('booking_slots').update({ is_available: false }).eq('id', selSlot.id)
-
-      const dateFormatted = new Date(selDate + 'T12:00:00').toLocaleDateString('en-GB', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-      })
-
-      const emailParams = {
-        from_name:    form.name,
-        from_email:   form.email,
-        reply_to:     form.email,
-        phone:        form.phone,
-        tattoo_style: form.style || 'Not specified',
-        description:  form.description,
-        reference:    form.reference || 'None provided',
-        booking_date: dateFormatted,
-        booking_slot: selSlot.label,
-        price_hint:   selSlot.price_hint || '',
-        session_type: selSlot.session_type || '',
-      }
-
-      // Notify SRJ
-      try {
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_BOOKING_TEMPLATE_ID, emailParams, EMAILJS_PUBLIC_KEY)
-      } catch (emailErr) {
-        console.warn('EmailJS booking notification to studio failed:', emailErr)
-      }
-
-      // Confirmation to customer (only if that template is configured)
-      if (EMAILJS_CUSTOMER_TEMPLATE_ID) {
-        try {
-          await emailjs.send(
-            EMAILJS_SERVICE_ID,
-            EMAILJS_CUSTOMER_TEMPLATE_ID,
-            { ...emailParams, to_email: form.email },
-            EMAILJS_PUBLIC_KEY
-          )
-        } catch (emailErr) {
-          console.warn('EmailJS customer confirmation failed:', emailErr)
-        }
-      }
-
-      setDone(true)
-      setStep(4)
+    let referenceImageUrl = null
+    if (refFile) {
+      try { referenceImageUrl = await uploadImage(supabase, 'references', 'bookings', refFile, 1600) }
+      catch { /* booking still goes through; the written reference is kept */ }
     }
 
-    setLoading(false)
+    const { data, error: rpcError } = await supabase.rpc('book_slot', {
+      p_slot_id: selSlot.id,
+      p_name: form.name.trim(),
+      p_email: form.email.trim(),
+      p_phone: form.phone.trim(),
+      p_style: form.style || null,
+      p_description: form.description.trim(),
+      p_reference: form.reference.trim() || null,
+      p_reference_image_url: referenceImageUrl,
+      p_age_confirmed: form.age,
+      p_flash_id: flash?.id || null,
+    })
+
+    if (rpcError) {
+      const msg = rpcError.message || ''
+      setError(msg.includes('taken') || msg.includes('18')
+        ? msg
+        : 'The booking did not go through. Check your connection and try again, or message on Instagram.')
+      if (msg.includes('taken')) { setSelSlot(null); setReload(r => r + 1) }
+      setSubmitting(false)
+      return
+    }
+
+    const token = Array.isArray(data) ? data[0]?.out_token : data?.out_token
+    const manageLink = token ? `${window.location.origin}/booking/manage/${token}` : ''
+
+    const emailParams = {
+      from_name: form.name,
+      from_email: form.email,
+      reply_to: form.email,
+      to_email: form.email,
+      phone: form.phone,
+      tattoo_style: form.style || 'Not specified',
+      description: form.description,
+      reference: form.reference || 'None provided',
+      reference_image_url: referenceImageUrl || 'No photo uploaded',
+      flash_title: flash?.title || 'None',
+      booking_date: fmtLong(selDate),
+      booking_slot: selSlot.label,
+      price_hint: selSlot.price_hint || '',
+      session_type: selSlot.session_type || '',
+      deposit_amount: settings.deposit_amount || 'to be confirmed',
+      deposit_link: settings.deposit_link || '',
+      manage_link: manageLink,
+    }
+
+    // Emails are best-effort: the booking is already saved, so a failed email never blocks the customer
+    if (EMAILJS_SERVICE_ID && EMAILJS_PUBLIC_KEY) {
+      if (EMAILJS_BOOKING_TEMPLATE_ID) {
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_BOOKING_TEMPLATE_ID, emailParams, EMAILJS_PUBLIC_KEY).catch(err => console.warn('Studio email failed', err))
+      }
+      if (EMAILJS_CUSTOMER_TEMPLATE_ID) {
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_CUSTOMER_TEMPLATE_ID, emailParams, EMAILJS_PUBLIC_KEY).catch(err => console.warn('Customer email failed', err))
+      }
+    }
+
+    setDone({ date: selDate, slot: selSlot, name: form.name, email: form.email, manageLink })
+    setSubmitting(false)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  if (done) return (
-    <div className="booking-page page-enter">
-      <div className="booking-success">
-        <div className="success-icon"><Check size={40}/></div>
-        <h2>Booking Request Sent!</h2>
-        <p>Thanks {form.name}! SRJ will be in touch to confirm your session.</p>
-        <p style={{ fontSize: '.85rem', color: 'var(--muted)', marginTop: '-.5rem' }}>
-          A confirmation email has been sent to {form.email}.
-        </p>
-        <div className="success-details">
-          <p><strong>Date:</strong> {new Date(selDate+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
-          <p><strong>Slot:</strong> {selSlot?.label}</p>
-          <p><strong>Style:</strong> {form.style || 'Not specified'}</p>
+  // ---------- Confirmation screen ----------
+  if (done) {
+    const ics = buildICS({
+      date: done.date,
+      label: done.slot.label,
+      title: 'Tattoo appointment, SRJ Inked',
+      description: `${done.slot.label}. Bring photo ID.${done.manageLink ? ` Manage your booking: ${done.manageLink}` : ''}`,
+    })
+    return (
+      <div className="booking-page page-enter">
+        <header className="page-hero">
+          <h1 className="section-title">Request sent</h1>
+          <div className="gold-line" />
+          <p>Thanks {done.name.split(' ')[0]}. Your slot is held while it's confirmed.</p>
+        </header>
+        <div className="container bk-done">
+          <dl className="bk-summary">
+            <div><dt>Date</dt><dd>{fmtLong(done.date)}</dd></div>
+            <div><dt>Time</dt><dd>{done.slot.label}</dd></div>
+            {done.slot.price_hint && <div><dt>Price guide</dt><dd>{done.slot.price_hint}</dd></div>}
+          </dl>
+
+          <div className="bk-next">
+            <h2 className="bk-h">What happens next</h2>
+            <ol>
+              <li>{settings.deposit_link
+                ? <>Pay your {settings.deposit_amount || ''} deposit to lock the slot in.</>
+                : <>You'll be contacted about the deposit to lock the slot in.</>}
+              </li>
+              <li>You'll get a confirmation once the deposit is in.</li>
+              <li>Bring photo ID on the day.</li>
+            </ol>
+            {settings.deposit_note && <p className="bk-small">{settings.deposit_note}</p>}
+          </div>
+
+          <div className="bk-done-actions">
+            {settings.deposit_link && (
+              <a href={settings.deposit_link} target="_blank" rel="noreferrer" className="btn btn-gold">
+                Pay deposit{settings.deposit_amount ? ` (${settings.deposit_amount})` : ''}
+              </a>
+            )}
+            <a href={ics} download="srj-inked-appointment.ics" className="btn btn-outline"><CalendarPlus size={18} /> Add to calendar</a>
+          </div>
+
+          {done.manageLink && (
+            <p className="bk-small">
+              Need to cancel? Use <Link to={done.manageLink.replace(window.location.origin, '')}>your booking page</Link>. It's also in your confirmation email to {done.email}.
+            </p>
+          )}
         </div>
-        <button className="btn btn-gold" onClick={() => { setStep(1); setDone(false); setSelDate(null); setSelSlot(null) }}>
-          Book Another
-        </button>
       </div>
-    </div>
-  )
+    )
+  }
+
+  // ---------- Booking flow ----------
+  const mm = String(month + 1).padStart(2, '0')
+  const daysInMonth = lastDayOfMonth(year, month + 1)
+  const offset = (new Date(year, month, 1).getDay() + 6) % 7 // Monday-first grid
+  const todayStr = todayISO()
+  const hasAny = Object.keys(slots).some(d => d >= todayStr)
 
   return (
     <div className="booking-page page-enter">
-      <div className="page-hero">
-        <h1 className="section-title">Book Your <span>Session</span></h1>
-        <div className="gold-line" style={{margin:'1rem auto'}}/>
-        <p>Choose a date, pick a slot, fill in your details.</p>
-      </div>
+      <header className="page-hero">
+        <h1 className="section-title">Book a session</h1>
+        <div className="gold-line" />
+        <p>Pick a date, choose a time, then tell me about the tattoo. It takes about two minutes.</p>
+      </header>
 
-      <div className="container booking-wrap">
-        <div className="booking-steps">
-          {['Choose Date','Choose Time','Your Details'].map((s,i) => (
-            <React.Fragment key={s}>
-              <div className={`bstep${step>i?' done':''}${step===i+1?' active':''}`}>
-                <div className="bstep-num">{step>i+1 ? <Check size={14}/> : i+1}</div>
-                <span>{s}</span>
-              </div>
-              {i<2 && <div className={`bstep-line${step>i+1?' done':''}`}/>}
-            </React.Fragment>
-          ))}
-        </div>
+      <div className="container bk-body">
+        {settings.booking_notice && <p className="bk-notice">{settings.booking_notice}</p>}
 
-        <div className="booking-body">
-          <div className="booking-calendar">
-            <div className="cal-header">
-              <button onClick={prev}><ChevronLeft size={20}/></button>
-              <h3>{MONTHS[month]} {year}</h3>
-              <button onClick={next}><ChevronRight size={20}/></button>
+        {flash && (
+          <div className="bk-flash">
+            {flash.image_url && <img src={flash.image_url} alt="" />}
+            <div>
+              <p className="bk-flash-label">Booking flash design</p>
+              <p className="bk-flash-name">{flash.title}</p>
+              <p className="bk-small">{[flash.size, flash.price].filter(Boolean).join(', ')}</p>
             </div>
-            <div className="cal-days-header">{DAYS.map(d => <span key={d}>{d}</span>)}</div>
-            <div className="cal-grid">
-              {Array.from({length: fd}).map((_,i) => <div key={`e${i}`} className="cal-empty"/>)}
-              {Array.from({length: dim}, (_,i) => i+1).map(d => {
-                const s = ds(d)
-                const has  = !!slots[s]
-                const past = new Date(s) < new Date(today.toDateString())
-                const sel  = selDate === s
+            <button className="bk-flash-x" onClick={() => setFlash(null)} aria-label="Remove flash design"><X size={18} /></button>
+          </div>
+        )}
+
+        {/* Step 1 */}
+        <section className="bk-step" aria-labelledby="s1">
+          <h2 id="s1" className="bk-h"><span className="bk-num">1</span> Pick a date</h2>
+          <div className="cal">
+            <div className="cal-top">
+              <button onClick={() => changeMonth(-1)} disabled={isPastMonth} aria-label="Previous month"><ChevronLeft size={22} /></button>
+              <p className="cal-month display" aria-live="polite">{MONTHS[month]} {year}</p>
+              <button onClick={() => changeMonth(1)} aria-label="Next month"><ChevronRight size={22} /></button>
+            </div>
+            <div className="cal-grid" role="grid">
+              {DAYS.map(d => <span key={d} className="cal-dow" aria-hidden="true">{d}</span>)}
+              {Array.from({ length: offset }).map((_, i) => <span key={'e' + i} />)}
+              {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(d => {
+                const ds = `${year}-${mm}-${String(d).padStart(2, '0')}`
+                const open = !!slots[ds] && ds >= todayStr
                 return (
-                  <button key={d}
-                    className={`cal-day${has&&!past?' available':''}${past?' past':''}${sel?' selected':''}`}
-                    onClick={() => { if (!past && has) { setSelDate(s); setSelSlot(null); setStep(2) } }}
-                    disabled={!has || past}>
-                    {d}{has && !past && <span className="cal-dot"/>}
-                  </button>
+                  <button
+                    key={d}
+                    className={`cal-day${open ? ' is-open' : ''}${selDate === ds ? ' is-sel' : ''}`}
+                    disabled={!open}
+                    onClick={() => pickDate(ds)}
+                    aria-label={`${fmtLong(ds)}${open ? `, ${slots[ds].length} slot${slots[ds].length > 1 ? 's' : ''} free` : ', no slots'}`}
+                    aria-pressed={selDate === ds}
+                  >{d}</button>
                 )
               })}
             </div>
-            <div className="cal-legend">
-              <span><span className="leg-dot available"/>Available</span>
-              <span><span className="leg-dot selected"/>Selected</span>
+            {!loadingSlots && !hasAny && (
+              <p className="cal-empty">No open slots this month. Try the next month, or <Link to="/contact">ask about dates</Link>.</p>
+            )}
+          </div>
+        </section>
+
+        {/* Step 2 */}
+        {selDate && (
+          <section className="bk-step" aria-labelledby="s2" ref={slotsRef}>
+            <h2 id="s2" className="bk-h"><span className="bk-num">2</span> Choose a time</h2>
+            <p className="bk-date">{fmtLong(selDate)}</p>
+            <div className="slot-list">
+              {(slots[selDate] || []).map(s => (
+                <button key={s.id} className={`slot${selSlot?.id === s.id ? ' is-sel' : ''}`} onClick={() => pickSlot(s)} aria-pressed={selSlot?.id === s.id}>
+                  <span className="slot-time">{s.label}</span>
+                  <span className="slot-type">{s.session_type}</span>
+                  {s.price_hint && <span className="slot-price">{s.price_hint}</span>}
+                  {selSlot?.id === s.id && <Check size={20} className="slot-check" />}
+                </button>
+              ))}
             </div>
-            <div className="cal-note"><p>No slots? Contact SRJ via social media to request a date.</p></div>
-          </div>
+          </section>
+        )}
 
-          <div className="booking-right">
-            {step === 1 && (
-              <div className="booking-prompt">
-                <Clock size={40} strokeWidth={1} color="var(--gold)"/>
-                <h3>Select a Date</h3>
-                <p>Choose a highlighted date to see available time slots.</p>
-              </div>
-            )}
-
-            {step >= 2 && selDate && (
-              <div className="slot-panel">
-                <h3>Available on {new Date(selDate+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}</h3>
-                <div className="slots-list">
-                  {slots[selDate]?.map(slot => (
-                    <button key={slot.id}
-                      className={`slot-btn${selSlot?.id===slot.id?' selected':''}`}
-                      onClick={() => { setSelSlot(slot); setStep(3) }}>
-                      <Clock size={14}/>
-                      <span>{slot.label}</span>
-                      <span className="slot-type">{slot.session_type}</span>
-                      {slot.price_hint && <span style={{fontSize:'.8rem',color:'var(--gold)'}}>{slot.price_hint}</span>}
-                      {selSlot?.id === slot.id && <Check size={14}/>}
-                    </button>
-                  ))}
+        {/* Step 3 */}
+        {selSlot && (
+          <section className="bk-step" aria-labelledby="s3" ref={detailsRef}>
+            <h2 id="s3" className="bk-h"><span className="bk-num">3</span> Your details</h2>
+            <form onSubmit={submit} className="bk-form" noValidate={false}>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="bk-name">Full name</label>
+                  <input id="bk-name" required autoComplete="name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="bk-phone">Phone</label>
+                  <input id="bk-phone" required type="tel" autoComplete="tel" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
                 </div>
               </div>
-            )}
+              <div className="form-group">
+                <label htmlFor="bk-email">Email</label>
+                <input id="bk-email" required type="email" autoComplete="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label htmlFor="bk-style">Style</label>
+                <select id="bk-style" value={form.style} onChange={e => setForm(f => ({ ...f, style: e.target.value }))}>
+                  <option value="">Choose a style (optional)</option>
+                  {STYLES.map(s => <option key={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="bk-desc">Tell me about the tattoo</label>
+                <textarea id="bk-desc" required rows={5} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="What it is, where it goes, roughly how big, and anything it means to you." />
+              </div>
 
-            {step >= 3 && selSlot && (
-              <form onSubmit={submit} className="booking-form">
-                <h3>Your Details</h3>
-                <div className="booking-selection-summary">
-                  <p>{new Date(selDate+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'long',year:'numeric'})}</p>
-                  <p>{selSlot.label}{selSlot.price_hint && ` · ${selSlot.price_hint}`}</p>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Full Name *</label>
-                    <input required value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))} placeholder="Your name"/>
+              <div className="form-group">
+                <span className="bk-label">Reference photo (optional)</span>
+                {refPreview ? (
+                  <div className="ref-preview">
+                    <img src={refPreview} alt="Your reference" />
+                    <button type="button" className="btn btn-outline" onClick={clearRef}>Remove photo</button>
                   </div>
-                  <div className="form-group">
-                    <label>Phone *</label>
-                    <input required value={form.phone} onChange={e => setForm(f=>({...f,phone:e.target.value}))} placeholder="07xxx..."/>
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label>Email *</label>
-                  <input type="email" required value={form.email} onChange={e => setForm(f=>({...f,email:e.target.value}))} placeholder="you@email.com"/>
-                </div>
-                <div className="form-group">
-                  <label>Style</label>
-                  <select value={form.style} onChange={e => setForm(f=>({...f,style:e.target.value}))}>
-                    <option value="">Select...</option>
-                    {['Black & Grey','Realism','Traditional','Neo-Traditional','Fine Line','Geometric','Japanese','Watercolour','Lettering','Other'].map(s => <option key={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Describe Your Tattoo *</label>
-                  <textarea required rows={4} value={form.description} onChange={e => setForm(f=>({...f,description:e.target.value}))} placeholder="Idea, placement, size, meaning..."/>
-                </div>
-                <div className="form-group">
-                  <label>Reference / Inspiration</label>
-                  <input value={form.reference} onChange={e => setForm(f=>({...f,reference:e.target.value}))} placeholder="Instagram link, Pinterest board..."/>
-                </div>
+                ) : (
+                  <button type="button" className="ref-drop" onClick={() => fileRef.current?.click()}>
+                    <ImagePlus size={22} /> Add a reference photo
+                  </button>
+                )}
+                <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onRefFile} className="visually-hidden" tabIndex={-1} />
+              </div>
 
-                <div className="form-note">
-                  <p>This is a booking <em>request</em>. SRJ will confirm and arrange a deposit.</p>
-                </div>
+              <div className="form-group">
+                <label htmlFor="bk-ref">Links to inspiration (optional)</label>
+                <input id="bk-ref" value={form.reference} onChange={e => setForm(f => ({ ...f, reference: e.target.value }))} placeholder="Instagram post, Pinterest board" />
+              </div>
 
-                <button type="submit" className="btn btn-gold" disabled={loading} style={{width:'100%'}}>
-                  {loading ? 'Sending...' : 'Request Booking'}
-                </button>
-                <button type="button" className="btn btn-outline" style={{width:'100%',marginTop:'.5rem'}} onClick={() => setStep(2)}>
-                  ← Back to Slots
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
+              <label className="bk-check">
+                <input type="checkbox" checked={form.age} onChange={e => setForm(f => ({ ...f, age: e.target.checked }))} />
+                <span>I'm 18 or over and will bring photo ID.</span>
+              </label>
+
+              <div className="bk-recap">
+                <span>{fmtLong(selDate)}</span>
+                <span>{selSlot.label}{selSlot.price_hint ? `, ${selSlot.price_hint}` : ''}</span>
+              </div>
+
+              {settings.deposit_note && <p className="bk-small">{settings.deposit_note}</p>}
+              {error && <p className="form-error" role="alert">{error}</p>}
+
+              <button type="submit" className="btn btn-gold bk-submit" disabled={submitting}>
+                {submitting ? 'Sending request…' : 'Send booking request'}
+              </button>
+            </form>
+          </section>
+        )}
+        {error && !selSlot && <p className="form-error" role="alert">{error}</p>}
       </div>
     </div>
   )

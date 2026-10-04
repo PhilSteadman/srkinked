@@ -3,10 +3,7 @@ import {MapPin,Calendar,ExternalLink} from 'lucide-react'
 import {supabase} from '../lib/supabase'
 import {useSEO} from '../lib/useSEO'
 import './Events.css'
-const DEMO=[
-  {id:1,title:'Bristol Tattoo Convention',event_date:'2025-03-15',location:'Ashton Gate, Bristol',description:'SRJ Inked exhibiting all weekend. Walk-in slots available \u2014 come get tattooed live at the show!',booking_link:null},
-  {id:2,title:'Guest Spot \u2013 Leeds',event_date:'2025-04-05',location:'Inkwell Studio, Leeds',description:'A weekend guest spot in Leeds. Limited appointments \u2014 message to book.',booking_link:null},
-]
+
 function EventCard({event,isPast}){
   const d=new Date(event.event_date+'T12:00:00')
   return(
@@ -25,7 +22,7 @@ export default function Events(){
   const [past,setPast]=useState([])
   useEffect(()=>{
     supabase.from('events').select('*').order('event_date').then(({data})=>{
-      const src=data?.length?data:DEMO
+      const src=data||[]
       const now=new Date().toISOString().split('T')[0]
       setUpcoming(src.filter(e=>e.event_date>=now))
       setPast(src.filter(e=>e.event_date<now).reverse())

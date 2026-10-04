@@ -1,10 +1,12 @@
-import React from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import React, { Suspense, lazy } from 'react'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
 import Gallery from './pages/Gallery'
+import Flash from './pages/Flash'
 import Booking from './pages/Booking'
+import ManageBooking from './pages/ManageBooking'
 import Events from './pages/Events'
 import Blog from './pages/Blog'
 import BlogPost from './pages/BlogPost'
@@ -13,29 +15,52 @@ import Pricing from './pages/Pricing'
 import Contact from './pages/Contact'
 import Aftercare from './pages/Aftercare'
 import Shop from './pages/Shop'
-import Admin from './pages/Admin'
+// Admin is only downloaded when someone visits /admin
+const Admin = lazy(() => import('./pages/Admin'))
 
 function Layout({ children }) {
-  return <><Navbar/><main>{children}</main><Footer/></>
+  return (
+    <>
+      <a href="#main" className="skip-link">Skip to content</a>
+      <Navbar />
+      <main id="main">{children}</main>
+      <Footer />
+    </>
+  )
 }
+
+function NotFound() {
+  return (
+    <header className="page-hero" style={{ minHeight: '70vh' }}>
+      <h1 className="section-title">Page not found</h1>
+      <div className="gold-line" />
+      <p>That page has moved or never existed.</p>
+      <p style={{ marginTop: '1.5rem' }}><Link to="/" className="btn btn-gold">Go to the homepage</Link></p>
+    </header>
+  )
+}
+
+const page = el => <Layout>{el}</Layout>
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/admin" element={<Admin/>}/>
-        <Route path="/" element={<Layout><Home/></Layout>}/>
-        <Route path="/gallery" element={<Layout><Gallery/></Layout>}/>
-        <Route path="/booking" element={<Layout><Booking/></Layout>}/>
-        <Route path="/events" element={<Layout><Events/></Layout>}/>
-        <Route path="/blog" element={<Layout><Blog/></Layout>}/>
-        <Route path="/blog/:slug" element={<Layout><BlogPost/></Layout>}/>
-        <Route path="/videos" element={<Layout><Videos/></Layout>}/>
-        <Route path="/pricing" element={<Layout><Pricing/></Layout>}/>
-        <Route path="/aftercare" element={<Layout><Aftercare/></Layout>}/>
-        <Route path="/shop" element={<Layout><Shop/></Layout>}/>
-        <Route path="/contact" element={<Layout><Contact/></Layout>}/>
-        <Route path="*" element={<Layout><div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:'1rem',paddingTop:'100px'}}><h1 style={{fontFamily:'var(--font-hero)',fontSize:'8rem',color:'var(--gold)',lineHeight:1}}>404</h1><p style={{color:'var(--muted)'}}>Page not found.</p><a href="/" className="btn btn-outline">Go Home</a></div></Layout>}/>
+        <Route path="/admin" element={<Suspense fallback={<p style={{ padding: '2rem', color: 'var(--ash)' }}>Loading admin…</p>}><Admin /></Suspense>} />
+        <Route path="/" element={page(<Home />)} />
+        <Route path="/gallery" element={page(<Gallery />)} />
+        <Route path="/flash" element={page(<Flash />)} />
+        <Route path="/booking" element={page(<Booking />)} />
+        <Route path="/booking/manage/:token" element={page(<ManageBooking />)} />
+        <Route path="/pricing" element={page(<Pricing />)} />
+        <Route path="/events" element={page(<Events />)} />
+        <Route path="/blog" element={page(<Blog />)} />
+        <Route path="/blog/:slug" element={page(<BlogPost />)} />
+        <Route path="/videos" element={page(<Videos />)} />
+        <Route path="/aftercare" element={page(<Aftercare />)} />
+        <Route path="/shop" element={page(<Shop />)} />
+        <Route path="/contact" element={page(<Contact />)} />
+        <Route path="*" element={page(<NotFound />)} />
       </Routes>
     </BrowserRouter>
   )

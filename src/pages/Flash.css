@@ -1,0 +1,16 @@
+.flash-page { background: var(--paper); }
+.flash-page-sheet { padding-top: calc(var(--nav-h) + clamp(3rem, 7vw, 5rem)); border-top: none; }
+.flash-page-sheet .flash-lede { max-width: 52ch; margin-bottom: 3rem; }
+.flash-row--page { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 2.5rem 1.8rem; }
+.flash-card-img { position: relative; }
+.flash-card-book {
+  font-family: var(--font-display); font-weight: 800; text-transform: uppercase; font-size: 1.05rem;
+  text-decoration: underline; text-underline-offset: 4px; margin-top: .2rem;
+}
+.flash-card.is-claimed { opacity: .55; }
+.flash-claimed {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-12deg);
+  font-family: var(--font-display); font-weight: 900; font-size: 2.2rem; text-transform: uppercase;
+  color: #8a2a1f; border: 4px solid #8a2a1f; padding: .1rem .8rem;
+}
+.flash-note { margin-top: 3rem; font-style: italic; color: var(--paper-ink); opacity: .8; }

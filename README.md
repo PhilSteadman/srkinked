@@ -1,50 +1,41 @@
-# SRJ Inked – Website
+# SRJ Inked — website (v16 remodel)
 
-React + Vite frontend hosted on Netlify, Supabase backend.
+React + Vite site on Netlify, data on Supabase, emails through EmailJS.
 
-## Pages
-- `/` Home — hero, gallery, pricing, events, CTA
-- `/gallery` — filterable masonry grid with lightbox
-- `/booking` — calendar slot picker + booking form
-- `/pricing` — rate cards + FAQ
-- `/events` — conventions and pop-ups
-- `/blog` — journal posts
-- `/blog/:slug` — post detail
-- `/videos` — YouTube channel feed
-- `/contact` — contact form + socials
-- `/admin` — full management panel (auth required)
+## Upgrading to v16 — do these in order
 
-## Setup
+1. **Database**: Supabase → SQL Editor → paste all of `supabase-remodel.sql` → Run.
+   Safe to run more than once. Do this at about the same time as step 2,
+   because public bookings now go through the new `book_slot` function.
+2. **Code**: replace the files in your GitHub repo with this folder and push.
+   (GitHub Desktop is the easiest way to push a whole folder.)
+3. **Site settings** (yoursite/admin → Site settings):
+   - Deposit amount and payment link (Stripe Payment Link, PayPal.me or Monzo.me)
+   - Your town/area (leave blank to hide)
+   - Check "Tattoos done": clear it unless the number is accurate
+   - Optional: hero headline and hero photo
+4. **Emails** (EmailJS dashboard), see `emails/`:
+   - Studio notification: paste `emails/studio-booking-notification.html` into your
+     existing booking template (adds reference photo and flash design).
+   - Customer confirmation (new): create a template, paste
+     `emails/customer-confirmation.html`, set **To Email** to `{{to_email}}` and
+     **Reply To** to `srjinked@gmail.com`. Add its ID to Netlify as
+     `VITE_EMAILJS_CUSTOMER_TEMPLATE_ID`, then redeploy.
 
-### 1. Supabase
-1. Create project at supabase.com
-2. SQL Editor → run `supabase-setup.sql`
-3. Authentication → Users → Invite User (your email)
-4. Copy Project URL and anon key from Settings → API
+## Environment variables (Netlify)
 
-### 2. Netlify
-1. Push to GitHub, connect to Netlify
-2. Build command: `npm run build` · Publish dir: `dist`
-3. Environment variables:
-```
-VITE_SUPABASE_URL=https://xxx.supabase.co
-VITE_SUPABASE_ANON_KEY=your_key
-VITE_YOUTUBE_API_KEY=optional
-VITE_YOUTUBE_CHANNEL_ID=optional
-```
+| Name | Needed for |
+|---|---|
+| VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY | Everything |
+| VITE_EMAILJS_SERVICE_ID, VITE_EMAILJS_PUBLIC_KEY | All emails |
+| VITE_EMAILJS_TEMPLATE_ID | Contact form email |
+| VITE_EMAILJS_BOOKING_TEMPLATE_ID | Booking email to you |
+| VITE_EMAILJS_CUSTOMER_TEMPLATE_ID | Booking email to the customer (optional) |
+| VITE_YOUTUBE_API_KEY, VITE_YOUTUBE_CHANNEL_ID | Videos page (optional) |
 
-### 3. Local dev
-```bash
-npm install
-cp .env.example .env   # add your Supabase keys
-npm run dev
-```
+`VITE_INSTAGRAM_ACCESS_TOKEN` is no longer used and can be deleted.
+Env vars only take effect after a new deploy.
 
-## Admin
-Visit `/admin` → sign in with invited email → manage bookings, slots, gallery, events, posts.
-
-## Adding booking slots
-Admin → Availability → select date → Quick Add or custom label.
-
-## Merch (future)
-`products` table is ready. Add Stripe when needed.
+## Sections that hide themselves until you add content
+Flash, reviews, journal, events, social strip and the homepage spotlight only
+appear once there's something to show, so the site never shows empty boxes.

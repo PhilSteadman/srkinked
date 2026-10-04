@@ -37,3 +37,91 @@
 .admin-empty{padding:3rem;text-align:center;color:var(--muted);border:1px dashed var(--border)}
 @media(max-width:900px){.admin-sidebar{position:fixed;left:-240px;top:0;bottom:0;z-index:200;transition:left .3s}.admin-sidebar.open{left:0}.admin-hamburger{display:block}.dash-stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:480px){.dash-stats{grid-template-columns:1fr}}
+
+/* ============ v16 admin additions ============ */
+.admin-content { max-width: 1200px; }
+.admin-nav-group {
+  font-family: var(--font-body); font-style: italic; color: var(--ash); font-size: .9rem;
+  padding: 1rem 1.5rem .3rem; text-transform: none; letter-spacing: 0;
+}
+.admin-nav-btn { font-size: .95rem; padding: .6rem 1.5rem; }
+
+.status-badge {
+  display: inline-block; padding: .2rem .6rem; font-family: var(--font-display); font-weight: 700;
+  font-size: .85rem; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap;
+}
+.status-pending { background: rgba(201,168,76,.15); color: var(--gold); }
+.status-confirmed { background: rgba(63,166,107,.15); color: var(--ok); }
+.status-cancelled { background: rgba(192,57,43,.15); color: var(--blood); }
+.status-unpaid { background: rgba(192,57,43,.12); color: #e07a6e; }
+.status-paid { background: rgba(63,166,107,.15); color: var(--ok); }
+.status-waived { background: rgba(156,148,137,.15); color: var(--ash); }
+
+.adm-toolbar { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.5rem; }
+.adm-seg { display: inline-flex; border: 1px solid var(--line); }
+.adm-seg button {
+  background: none; border: none; color: var(--ash); padding: .5rem 1rem; cursor: pointer;
+  font-family: var(--font-display); font-weight: 700; text-transform: uppercase; font-size: .95rem;
+}
+.adm-seg button.is-on { background: var(--bone); color: var(--ink); }
+
+.adm-list { display: flex; flex-direction: column; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.adm-row { background: var(--ink-2); padding: 1.1rem 1.25rem; }
+.adm-row.is-unread { border-left: 3px solid var(--gold); }
+.adm-row-top { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; align-items: flex-start; }
+.adm-name { font-family: var(--font-display); font-weight: 800; font-size: 1.3rem; text-transform: uppercase; line-height: 1.1; }
+.adm-meta { color: var(--ash); font-size: .92rem; }
+.adm-meta a { color: var(--gold); }
+.adm-gold { color: var(--gold); }
+.adm-body { margin-top: .7rem; white-space: pre-wrap; font-size: 1rem; }
+.adm-actions { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .9rem; align-items: center; }
+.adm-actions select { width: auto; padding: .35rem .6rem; font-size: .9rem; }
+.admin-action-btn { min-height: 34px; display: inline-flex; align-items: center; gap: .35rem; }
+.admin-action-btn.ok:hover { border-color: var(--ok); color: var(--ok); }
+.adm-thumb { width: 84px; height: 84px; object-fit: cover; border: 1px solid var(--line); }
+.adm-field-inline { display: flex; gap: .5rem; margin-top: .7rem; }
+.adm-field-inline textarea { font-size: .9rem; }
+
+/* Admin month calendar */
+.adm-cal-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.adm-cal-head h3 { font-family: var(--font-display); font-weight: 800; font-size: 1.8rem; text-transform: uppercase; min-width: 12ch; }
+.adm-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.adm-cal-dow { background: var(--ink); text-align: center; padding: .4rem; font-family: var(--font-display); font-weight: 700; color: var(--ash); text-transform: uppercase; font-size: .85rem; }
+.adm-cal-cell { background: var(--ink-2); min-height: 108px; padding: .4rem; text-align: left; border: none; color: var(--bone); cursor: pointer; display: flex; flex-direction: column; gap: 3px; }
+.adm-cal-cell.is-blank { background: var(--ink); cursor: default; }
+.adm-cal-cell.is-today .adm-cal-num { color: var(--gold); }
+.adm-cal-cell.is-sel { outline: 2px solid var(--gold); outline-offset: -2px; }
+.adm-cal-num { font-family: var(--font-display); font-weight: 800; font-size: 1.05rem; }
+.adm-chip { font-size: .72rem; line-height: 1.25; padding: 2px 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-chip.open { background: rgba(201,168,76,.12); color: var(--gold); }
+.adm-chip.pending { background: rgba(201,168,76,.3); color: var(--bone); }
+.adm-chip.confirmed { background: rgba(63,166,107,.3); color: var(--bone); }
+.adm-chip.hidden { background: var(--ink-3); color: var(--ash); }
+.adm-legend { display: flex; gap: 1rem; flex-wrap: wrap; margin: .8rem 0 1.5rem; font-size: .85rem; color: var(--ash); }
+.adm-legend span { display: inline-flex; align-items: center; gap: .35rem; }
+.adm-legend i { width: 12px; height: 12px; display: inline-block; }
+
+.adm-grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.adm-card { background: var(--ink-2); display: flex; flex-direction: column; }
+.adm-card-img { aspect-ratio: 1; background: var(--ink-3); overflow: hidden; position: relative; }
+.adm-card-img img { width: 100%; height: 100%; object-fit: cover; }
+.adm-card-img.contain img { object-fit: contain; background: var(--paper); padding: 8%; }
+.adm-card-body { padding: .7rem; display: flex; flex-direction: column; gap: .4rem; flex: 1; }
+.adm-card-flags { position: absolute; top: .4rem; left: .4rem; display: flex; gap: .3rem; }
+
+.adm-drop {
+  border: 2px dashed var(--line); padding: 1.6rem; text-align: center; cursor: pointer; margin-bottom: 1rem;
+  background: none; width: 100%; color: var(--ash); transition: border-color .2s;
+}
+.adm-drop:hover { border-color: var(--gold); color: var(--bone); }
+.adm-previews { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; }
+.adm-previews img { height: 90px; width: auto; }
+.adm-check { display: flex; align-items: center; gap: .5rem; text-transform: none; font-family: var(--font-body); font-weight: 400; color: var(--bone); letter-spacing: 0; font-size: .95rem; cursor: pointer; margin: 0; }
+.adm-help { color: var(--ash); font-size: .9rem; margin: -.4rem 0 1rem; }
+.adm-save-bar { position: sticky; bottom: 0; background: var(--ink); border-top: 1px solid var(--line); padding: 1rem 0; display: flex; gap: 1rem; align-items: center; z-index: 5; }
+.adm-saved { color: var(--ok); font-family: var(--font-display); font-weight: 700; text-transform: uppercase; }
+
+@media (max-width: 760px) {
+  .adm-cal-cell { min-height: 64px; }
+  .adm-chip { font-size: 0; height: 6px; padding: 0; }
+}

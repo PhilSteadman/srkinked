@@ -18,7 +18,7 @@ export function useSEO({ title, description, image, path = '' }) {
       el.setAttribute('content', content)
     }
 
-    const desc = description || 'Bristol\'s custom tattoo studio. Book your session online, browse the gallery, and read tattoo guides from SRJ Inked.'
+    const desc = description || 'Custom tattoos by SRJ Inked. See the work, browse flash designs, and book your session online.'
     const img = image || DEFAULT_IMAGE
     const url = `${SITE_URL}${path}`
 

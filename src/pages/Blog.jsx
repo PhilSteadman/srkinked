@@ -4,16 +4,12 @@ import {BookOpen,ArrowRight} from 'lucide-react'
 import {supabase} from '../lib/supabase'
 import {useSEO} from '../lib/useSEO'
 import './Blog.css'
-const DEMO=[
-  {id:1,title:'Why Black & Grey Realism is Having a Moment',slug:'black-grey-realism',created_at:'2025-01-15',tags:['Style','Realism'],content:'Black and grey tattooing has been around for decades, but right now it\'s experiencing a genuine renaissance\u2014and for good reason.'},
-  {id:2,title:'Aftercare: The Most Important Part of Getting a Tattoo',slug:'aftercare-guide',created_at:'2025-01-08',tags:['Guide','Aftercare'],content:'You\'ve just sat through hours in the chair. The design is exactly what you wanted. Now what?'},
-  {id:3,title:'How to Choose the Right Placement for Your Tattoo',slug:'tattoo-placement',created_at:'2024-12-20',tags:['Guide','Advice'],content:'Placement is one of the most underrated decisions in getting a tattoo\u2014and one of the hardest to reverse.'},
-]
+
 export default function Blog(){
-  useSEO({ title:'Journal', description:'Tattoo guides, style breakdowns, and studio stories from SRJ Inked, Bristol.', path:'/blog' })
+  useSEO({ title:'Journal', description:'Tattoo guides, style breakdowns, and studio stories from SRJ Inked.', path:'/blog' })
   const [posts,setPosts]=useState([])
   const [tag,setTag]=useState('All')
-  useEffect(()=>{supabase.from('posts').select('*').eq('published',true).order('created_at',{ascending:false}).then(({data})=>{setPosts(data?.length?data:DEMO)})},[])
+  useEffect(()=>{supabase.from('posts').select('*').eq('published',true).order('created_at',{ascending:false}).then(({data})=>{setPosts(data||[])})},[])
   const allTags=['All',...new Set(posts.flatMap(p=>p.tags||[]))]
   const filtered=tag==='All'?posts:posts.filter(p=>(p.tags||[]).includes(tag))
   return(

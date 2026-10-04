@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>New booking request — SRJ Inked</title></head>
+<body style="font-family:Arial,sans-serif;background-color:#100E0C;margin:0;padding:32px 16px;">
+  <div style="max-width:600px;margin:0 auto;background:#1A1714;border:1px solid #34302A;">
+
+    <div style="background:#100E0C;padding:24px 32px;border-bottom:3px solid #C9A84C;">
+      <p style="font-size:13px;color:#C9A84C;margin:0 0 4px;">New booking request</p>
+      <p style="font-family:Impact,'Arial Narrow',sans-serif;font-size:30px;letter-spacing:1px;color:#ECE5D8;text-transform:uppercase;margin:0;">{{from_name}}</p>
+    </div>
+
+    <div style="padding:28px 32px;color:#ECE5D8;">
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><td style="padding:10px 0;border-bottom:1px solid #34302A;color:#9C9489;font-size:13px;width:120px;">Date</td><td style="padding:10px 0;border-bottom:1px solid #34302A;color:#C9A84C;font-size:16px;font-weight:bold;">{{booking_date}}</td></tr>
+        <tr><td style="padding:10px 0;border-bottom:1px solid #34302A;color:#9C9489;font-size:13px;">Slot</td><td style="padding:10px 0;border-bottom:1px solid #34302A;font-size:16px;">{{booking_slot}} {{price_hint}}</td></tr>
+        <tr><td style="padding:10px 0;border-bottom:1px solid #34302A;color:#9C9489;font-size:13px;">Email</td><td style="padding:10px 0;border-bottom:1px solid #34302A;font-size:16px;"><a href="mailto:{{from_email}}" style="color:#C9A84C;">{{from_email}}</a></td></tr>
+        <tr><td style="padding:10px 0;border-bottom:1px solid #34302A;color:#9C9489;font-size:13px;">Phone</td><td style="padding:10px 0;border-bottom:1px solid #34302A;font-size:16px;">{{phone}}</td></tr>
+        <tr><td style="padding:10px 0;border-bottom:1px solid #34302A;color:#9C9489;font-size:13px;">Style</td><td style="padding:10px 0;border-bottom:1px solid #34302A;font-size:16px;">{{tattoo_style}}</td></tr>
+        <tr><td style="padding:10px 0;border-bottom:1px solid #34302A;color:#9C9489;font-size:13px;">Flash design</td><td style="padding:10px 0;border-bottom:1px solid #34302A;font-size:16px;">{{flash_title}}</td></tr>
+      </table>
+
+      <p style="color:#9C9489;font-size:13px;margin:24px 0 8px;">Their idea</p>
+      <div style="background:#100E0C;border-left:3px solid #C9A84C;padding:16px 18px;font-size:15px;line-height:1.7;white-space:pre-wrap;">{{description}}</div>
+
+      <p style="color:#9C9489;font-size:13px;margin:20px 0 6px;">Reference photo</p>
+      <p style="font-size:14px;margin:0;word-break:break-all;"><a href="{{reference_image_url}}" style="color:#C9A84C;">{{reference_image_url}}</a></p>
+
+      <p style="color:#9C9489;font-size:13px;margin:16px 0 6px;">Inspiration links</p>
+      <p style="font-size:14px;margin:0;word-break:break-all;color:#ECE5D8;">{{reference}}</p>
+
+      <p style="font-size:14px;color:#9C9489;margin:28px 0 0;">Confirm or decline in the admin panel. Hitting reply here goes straight to {{from_name}}.</p>
+    </div>
+  </div>
+</body>
+</html>

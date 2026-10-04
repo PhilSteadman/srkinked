@@ -97,7 +97,7 @@ export default function Contact() {
           </div>
 
           <div className="contact-note">
-            <p><strong>{settings.studio_address}</strong></p>
+            <p><strong>{(settings.studio_location || settings.studio_address)}</strong></p>
             <p>Exact studio location shared on booking confirmation.</p>
             {settings.contact_email && (
               <p style={{ marginTop: '.5rem' }}>

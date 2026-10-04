@@ -1,36 +1,68 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 
-const DEFAULTS = {
+export const SETTINGS_DEFAULTS = {
   studio_photo_url: '',
+  hero_title: 'Where your story meets the canvas',
+  hero_subtitle: 'Custom tattoos, drawn for you and nobody else.',
+  hero_image_url: '',
+  studio_location: '',
   facebook_url: 'https://www.facebook.com/srjinked',
   instagram_url: 'https://www.instagram.com/srjinked',
   tiktok_url: 'https://www.tiktok.com/@s.r.j.inked',
   youtube_url: '',
-  studio_address: 'Bristol, UK',
+  studio_address: '',
   contact_email: '',
-  about_text: 'Based in Bristol, SRJ Inked specialises in bespoke tattoo art across every style. Every tattoo is designed exclusively for you.',
-  about_text_2: 'Exceptional hygiene standards, premium inks, and a welcoming studio environment. Your comfort and confidence are the foundation of every session.',
+  about_text: 'Every piece starts with a conversation. You bring the idea, the story, the reference photos. I turn it into something that works on skin and still looks right in twenty years.',
+  about_text_2: 'Clean studio, quality inks, and no rushing. Ask anything before we start.',
   price_minimum: '30',
   price_under_hour: '30',
   price_per_hour: '40',
   price_half_day: '150',
   price_full_day: '300',
   years_experience: '2+',
-  tattoos_completed: '500+',
+  tattoos_completed: '',
+  deposit_amount: '',
+  deposit_link: '',
+  deposit_note: 'Your slot is held for 48 hours while the deposit is paid. Deposits come off the final price and are non-refundable within 48 hours of the appointment.',
+  booking_notice: '',
+}
+
+// One fetch shared by every component on the page
+let cache = null
+let inflight = null
+const listeners = new Set()
+
+function fetchSettings() {
+  if (!inflight) {
+    inflight = supabase.from('site_settings').select('*').eq('id', 1).maybeSingle()
+      .then(({ data }) => {
+        const clean = {}
+        if (data) Object.entries(data).forEach(([k, v]) => { if (v !== null && v !== undefined) clean[k] = v })
+        cache = { ...SETTINGS_DEFAULTS, ...clean }
+        listeners.forEach(fn => fn(cache))
+        return cache
+      })
+      .catch(() => { cache = { ...SETTINGS_DEFAULTS }; return cache })
+  }
+  return inflight
+}
+
+// Call after saving settings in the admin so the site picks up changes
+export function refreshSettings() {
+  inflight = null
+  return fetchSettings()
 }
 
 export function useSettings() {
-  const [settings, setSettings] = useState(DEFAULTS)
-  const [loading, setLoading] = useState(true)
+  const [settings, setSettings] = useState(cache || SETTINGS_DEFAULTS)
+  const [loading, setLoading] = useState(!cache)
 
   useEffect(() => {
-    supabase.from('site_settings').select('*').eq('id', 1).single()
-      .then(({ data }) => {
-        if (data) setSettings({ ...DEFAULTS, ...data })
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
+    const fn = s => { setSettings(s); setLoading(false) }
+    listeners.add(fn)
+    if (cache) { setSettings(cache); setLoading(false) } else fetchSettings()
+    return () => listeners.delete(fn)
   }, [])
 
   return { settings, loading }

@@ -1,98 +1,115 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Image } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useSEO } from '../lib/useSEO'
 import './Gallery.css'
 
-const STYLES = ['All','Black & Grey','Realism','Traditional','Fine Line','Japanese','Geometric','Lettering','Watercolour']
-const PH = Array.from({length:12},(_,i)=>({id:i+1,title:`Tattoo ${i+1}`,style:STYLES[1+(i%(STYLES.length-1))],placeholder:true}))
-
 export default function Gallery() {
-  const [items, setItems] = useState(PH)
-  const [searchParams, setSearchParams] = useSearchParams()
-  const filter = searchParams.get('style') || 'All'
-  const [lightbox, setLightbox] = useState(null)
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [params, setParams] = useSearchParams()
+  const style = params.get('style') || 'All'
+  const healedOnly = params.get('view') === 'healed'
+  const [index, setIndex] = useState(null)
 
   useSEO({
-    title: filter !== 'All' ? `${filter} Tattoos` : 'Gallery',
-    description: 'Browse the SRJ Inked tattoo portfolio — black & grey, realism, traditional, fine line, Japanese, and geometric work from Bristol\'s custom tattoo studio.',
-    path: filter !== 'All' ? `/gallery?style=${encodeURIComponent(filter)}` : '/gallery',
+    title: style !== 'All' ? `${style} tattoos` : healedOnly ? 'Healed tattoos' : 'Work',
+    description: 'The SRJ Inked portfolio: fresh and healed tattoos across black and grey, realism, fine line, traditional and more.',
+    path: '/gallery',
   })
 
   useEffect(() => {
     supabase.from('gallery').select('*').order('created_at', { ascending: false })
-      .then(({ data }) => { if (data?.length) setItems(data) })
+      .then(({ data }) => { setItems(data || []); setLoading(false) })
   }, [])
 
-  const setFilter = (s) => {
-    if (s === 'All') setSearchParams({})
-    else setSearchParams({ style: s })
+  // Only offer style filters that actually have work in them
+  const styles = ['All', ...Array.from(new Set(items.map(i => i.style).filter(Boolean)))]
+  const hasHealed = items.some(i => i.healed)
+
+  const shown = items.filter(i => (style === 'All' || i.style === style) && (!healedOnly || i.healed))
+
+  const setParam = (key, val) => {
+    const next = new URLSearchParams(params)
+    if (val) next.set(key, val); else next.delete(key)
+    setParams(next, { replace: true })
   }
 
-  const filtered = filter === 'All' ? items : items.filter(i => i.style === filter)
-  // Featured items float to the top within the filtered set
-  const sorted = [...filtered].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0))
+  const close = () => setIndex(null)
+  const step = useCallback(d => setIndex(i => (i + d + shown.length) % shown.length), [shown.length])
+
+  useEffect(() => {
+    if (index === null) return
+    const onKey = e => {
+      if (e.key === 'Escape') close()
+      if (e.key === 'ArrowRight') step(1)
+      if (e.key === 'ArrowLeft') step(-1)
+    }
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKey)
+    return () => { document.body.style.overflow = ''; window.removeEventListener('keydown', onKey) }
+  }, [index, step])
+
+  const current = index !== null ? shown[index] : null
 
   return (
     <div className="gallery-page page-enter">
-      <div className="page-hero">
-        <p className="section-eyebrow">Portfolio</p>
-        <h1 className="section-title">The <span>Gallery</span></h1>
-        <div className="gold-line" style={{ margin: '1rem auto' }} />
-        <p>Every piece is original. Every tattoo tells a story.</p>
-      </div>
+      <header className="page-hero">
+        <h1 className="section-title">The work</h1>
+        <div className="gold-line" />
+        <p>Every piece here was drawn for the person wearing it.</p>
+      </header>
 
-      <div className="container" style={{ paddingTop: '3rem', paddingBottom: '4rem' }}>
-        <div className="filter-bar">
-          {STYLES.map(s => (
-            <button key={s} className={`filter-btn ${filter === s ? 'active' : ''}`} onClick={() => setFilter(s)}>
-              {s}
-            </button>
-          ))}
-        </div>
+      <div className="container gallery-body">
+        {hasHealed && (
+          <div className="gallery-views" role="tablist" aria-label="Show">
+            <button role="tab" aria-selected={!healedOnly} className={!healedOnly ? 'is-active' : ''} onClick={() => setParam('view', null)}>All work</button>
+            <button role="tab" aria-selected={healedOnly} className={healedOnly ? 'is-active' : ''} onClick={() => setParam('view', 'healed')}>Healed</button>
+          </div>
+        )}
 
-        <div className="gallery-masonry">
-          {sorted.map((item, i) => (
-            <div
-              key={item.id}
-              className="gm-card"
-              style={{ animationDelay: `${i * 0.05}s` }}
-              onClick={() => item.image_url && setLightbox(item)}
-            >
-              {item.featured && <span className="gm-featured-badge">Featured</span>}
-              {item.image_url ? (
-                <img src={item.image_url} alt={item.title} />
-              ) : (
-                <div className="gm-placeholder">
-                  <Image size={28} strokeWidth={1} />
-                  <span>{item.style}</span>
-                </div>
-              )}
-              <div className="gm-overlay">
-                <span className="tag">{item.style}</span>
-                <p>{item.title}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        {styles.length > 2 && (
+          <div className="filter-bar">
+            {styles.map(s => (
+              <button key={s} className={`filter-btn ${style === s ? 'active' : ''}`} onClick={() => setParam('style', s === 'All' ? null : s)}>{s}</button>
+            ))}
+          </div>
+        )}
 
-        {sorted.length === 0 && (
-          <div className="gallery-empty"><p>No pieces in this style yet. Check back soon!</p></div>
+        {loading ? (
+          <p className="gallery-loading">Loading the work…</p>
+        ) : shown.length === 0 ? (
+          <div className="empty-state"><p>{items.length ? 'Nothing in this filter yet.' : 'New work is on the way. Check back soon.'}</p></div>
+        ) : (
+          <div className="masonry">
+            {shown.map((item, i) => (
+              <button key={item.id} className="masonry-tile" onClick={() => setIndex(i)} aria-label={`Open ${item.title || item.style}`}>
+                <img src={item.image_url} alt={item.title || item.style || 'Tattoo'} loading="lazy" decoding="async" />
+                {item.healed && <span className="masonry-badge">Healed</span>}
+              </button>
+            ))}
+          </div>
         )}
       </div>
 
-      {lightbox && (
-        <div className="lightbox" onClick={() => setLightbox(null)}>
-          <div className="lightbox-inner" onClick={e => e.stopPropagation()}>
-            <button className="lb-close" onClick={() => setLightbox(null)}>✕</button>
-            <img src={lightbox.image_url} alt={lightbox.title} />
-            <div className="lb-info">
-              <span className="tag">{lightbox.style}</span>
-              <h3>{lightbox.title}</h3>
-              {lightbox.description && <p>{lightbox.description}</p>}
-            </div>
-          </div>
+      {current && (
+        <div className="lb" role="dialog" aria-modal="true" aria-label={current.title || current.style} onClick={close}>
+          <button className="lb-btn lb-close" onClick={close} aria-label="Close"><X size={26} /></button>
+          {shown.length > 1 && (
+            <>
+              <button className="lb-btn lb-prev" onClick={e => { e.stopPropagation(); step(-1) }} aria-label="Previous"><ChevronLeft size={30} /></button>
+              <button className="lb-btn lb-next" onClick={e => { e.stopPropagation(); step(1) }} aria-label="Next"><ChevronRight size={30} /></button>
+            </>
+          )}
+          <figure className="lb-figure" onClick={e => e.stopPropagation()}>
+            <img src={current.image_url} alt={current.title || current.style} />
+            <figcaption>
+              <span className="lb-title">{current.title || current.style}</span>
+              <span className="lb-meta">{[current.style, current.healed && 'Healed'].filter(Boolean).join(', ')}</span>
+              {current.description && <p>{current.description}</p>}
+            </figcaption>
+          </figure>
         </div>
       )}
     </div>

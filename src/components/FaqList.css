@@ -1,0 +1,19 @@
+.faq-list { border-top: 1px solid var(--line); max-width: 860px; }
+.faq-row { border-bottom: 1px solid var(--line); }
+.faq-q {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  background: none;
+  border: none;
+  color: var(--bone);
+  text-align: left;
+  padding: 1.2rem 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 1.2rem;
+}
+.faq-q svg { color: var(--gold); flex-shrink: 0; }
+.faq-a { color: var(--ash); padding: 0 2.5rem 1.4rem 0; max-width: 70ch; animation: fadeUp .25s ease both; }
