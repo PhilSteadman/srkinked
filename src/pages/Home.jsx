@@ -144,8 +144,8 @@ export default function Home() {
               <p>Placement, size, style, and any reference photos you have.</p>
             </li>
             <li>
-              <h3>Pay the deposit</h3>
-              <p>{settings.deposit_amount ? `A ${settings.deposit_amount} deposit secures your slot and comes off the final price.` : 'A deposit secures your slot and comes off the final price.'}</p>
+              <h3>Pay the booking fee</h3>
+              <p>{settings.deposit_amount ? `A ${settings.deposit_amount} non-refundable booking fee secures your slot and comes off the final price.` : 'A non-refundable booking fee secures your slot and comes off the final price.'}</p>
             </li>
             <li>
               <h3>Get tattooed</h3>

@@ -11,13 +11,14 @@ import './Booking.css'
 
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || ''
 const EMAILJS_BOOKING_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_BOOKING_TEMPLATE_ID || ''
-const EMAILJS_CUSTOMER_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_CUSTOMER_TEMPLATE_ID || ''
+// Where studio booking notifications go
+const STUDIO_EMAIL = 'srjinked@gmail.com'
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || ''
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const STYLES = ['Black & Grey', 'Realism', 'Fine Line', 'Traditional', 'Neo-Traditional', 'Japanese', 'Geometric', 'Lettering', 'Watercolour', 'Cover-up', 'Not sure yet']
-const EMPTY = { name: '', email: '', phone: '', style: '', description: '', reference: '', age: false }
+const EMPTY = { name: '', email: '', phone: '', style: '', description: '', reference: '', age: false, fee: false }
 
 export default function Booking() {
   const { settings } = useSettings()
@@ -114,6 +115,7 @@ export default function Booking() {
   const submit = async e => {
     e.preventDefault()
     if (!form.age) { setError('Tick the box to confirm you are 18 or over.'); return }
+    if (!form.fee) { setError('Tick the box to agree to the booking fee terms.'); return }
     setSubmitting(true); setError('')
 
     let referenceImageUrl = null
@@ -133,11 +135,12 @@ export default function Booking() {
       p_reference_image_url: referenceImageUrl,
       p_age_confirmed: form.age,
       p_flash_id: flash?.id || null,
+      p_fee_accepted: form.fee,
     })
 
     if (rpcError) {
       const msg = rpcError.message || ''
-      setError(msg.includes('taken') || msg.includes('18')
+      setError(msg.includes('taken') || msg.includes('18') || msg.includes('fee')
         ? msg
         : 'The booking did not go through. Check your connection and try again, or message on Instagram.')
       if (msg.includes('taken')) { setSelSlot(null); setReload(r => r + 1) }
@@ -168,14 +171,32 @@ export default function Booking() {
       manage_link: manageLink,
     }
 
-    // Emails are best-effort: the booking is already saved, so a failed email never blocks the customer
-    if (EMAILJS_SERVICE_ID && EMAILJS_PUBLIC_KEY) {
-      if (EMAILJS_BOOKING_TEMPLATE_ID) {
-        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_BOOKING_TEMPLATE_ID, emailParams, EMAILJS_PUBLIC_KEY).catch(err => console.warn('Studio email failed', err))
+    // One EmailJS template, sent twice with different wording: once to the studio, once to the customer.
+    // Emails are best-effort: the booking is already saved, so a failed email never blocks the customer.
+    if (EMAILJS_SERVICE_ID && EMAILJS_PUBLIC_KEY && EMAILJS_BOOKING_TEMPLATE_ID) {
+      const first = form.name.trim().split(' ')[0]
+      const studioCopy = {
+        ...emailParams,
+        to_email: STUDIO_EMAIL,
+        reply_to: form.email,
+        subject_line: `New booking request: ${form.name}, ${emailParams.booking_date}`,
+        heading: 'New booking request',
+        intro: `${form.name} has requested ${emailParams.booking_slot} on ${emailParams.booking_date}. Confirm or decline it in the admin panel. Replying to this email goes straight to them.`,
+        button_text: 'Open admin panel',
+        button_link: `${window.location.origin}/admin`,
       }
-      if (EMAILJS_CUSTOMER_TEMPLATE_ID) {
-        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_CUSTOMER_TEMPLATE_ID, emailParams, EMAILJS_PUBLIC_KEY).catch(err => console.warn('Customer email failed', err))
+      const customerCopy = {
+        ...emailParams,
+        to_email: form.email,
+        reply_to: STUDIO_EMAIL,
+        subject_line: `Your booking request with SRJ Inked, ${emailParams.booking_date}`,
+        heading: `Thanks, ${first}`,
+        intro: `Your request for ${emailParams.booking_slot} on ${emailParams.booking_date} has been received and the slot is being held. To lock it in, pay your ${settings.deposit_amount ? settings.deposit_amount + ' ' : ''}non-refundable booking fee from your booking page. You'll get a confirmation once it's in.`,
+        button_text: 'View your booking',
+        button_link: manageLink || window.location.origin,
       }
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_BOOKING_TEMPLATE_ID, studioCopy, EMAILJS_PUBLIC_KEY).catch(err => console.warn('Studio email failed', err))
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_BOOKING_TEMPLATE_ID, customerCopy, EMAILJS_PUBLIC_KEY).catch(err => console.warn('Customer email failed', err))
     }
 
     setDone({ date: selDate, slot: selSlot, name: form.name, email: form.email, manageLink })
@@ -209,10 +230,10 @@ export default function Booking() {
             <h2 className="bk-h">What happens next</h2>
             <ol>
               <li>{settings.deposit_link
-                ? <>Pay your {settings.deposit_amount || ''} deposit to lock the slot in.</>
-                : <>You'll be contacted about the deposit to lock the slot in.</>}
+                ? <>Pay your {settings.deposit_amount || ''} booking fee to lock the slot in.</>
+                : <>You'll be contacted about the booking fee to lock the slot in.</>}
               </li>
-              <li>You'll get a confirmation once the deposit is in.</li>
+              <li>You'll get a confirmation once the booking fee is in.</li>
               <li>Bring photo ID on the day.</li>
             </ol>
             {settings.deposit_note && <p className="bk-small">{settings.deposit_note}</p>}
@@ -221,7 +242,7 @@ export default function Booking() {
           <div className="bk-done-actions">
             {settings.deposit_link && (
               <a href={settings.deposit_link} target="_blank" rel="noreferrer" className="btn btn-gold">
-                Pay deposit{settings.deposit_amount ? ` (${settings.deposit_amount})` : ''}
+                Pay booking fee{settings.deposit_amount ? ` (${settings.deposit_amount})` : ''}
               </a>
             )}
             <a href={ics} download="srj-inked-appointment.ics" className="btn btn-outline"><CalendarPlus size={18} /> Add to calendar</a>
@@ -369,6 +390,15 @@ export default function Booking() {
                 <input id="bk-ref" value={form.reference} onChange={e => setForm(f => ({ ...f, reference: e.target.value }))} placeholder="Instagram post, Pinterest board" />
               </div>
 
+              <div className="bk-terms">
+                <p className="bk-terms-title">Booking fee{settings.deposit_amount ? `: ${settings.deposit_amount}` : ''}</p>
+                <p>{settings.deposit_note}</p>
+              </div>
+
+              <label className="bk-check">
+                <input type="checkbox" checked={form.fee} onChange={e => setForm(f => ({ ...f, fee: e.target.checked }))} />
+                <span>I agree to the booking fee terms above, including that the fee is non-refundable if I cancel or don't turn up.</span>
+              </label>
               <label className="bk-check">
                 <input type="checkbox" checked={form.age} onChange={e => setForm(f => ({ ...f, age: e.target.checked }))} />
                 <span>I'm 18 or over and will bring photo ID.</span>
@@ -379,7 +409,6 @@ export default function Booking() {
                 <span>{selSlot.label}{selSlot.price_hint ? `, ${selSlot.price_hint}` : ''}</span>
               </div>
 
-              {settings.deposit_note && <p className="bk-small">{settings.deposit_note}</p>}
               {error && <p className="form-error" role="alert">{error}</p>}
 
               <button type="submit" className="btn btn-gold bk-submit" disabled={submitting}>

@@ -24,7 +24,7 @@ export const SETTINGS_DEFAULTS = {
   tattoos_completed: '',
   deposit_amount: '',
   deposit_link: '',
-  deposit_note: 'Your slot is held for 48 hours while the deposit is paid. Deposits come off the final price and are non-refundable within 48 hours of the appointment.',
+  deposit_note: "The booking fee secures your slot and comes off the final price on the day. It is non-refundable if you cancel or don't turn up. If the studio has to cancel, you get it back in full.",
   booking_notice: '',
 }
 

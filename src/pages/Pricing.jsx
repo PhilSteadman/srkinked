@@ -50,7 +50,7 @@ export default function Pricing() {
 
         {s.deposit_amount && (
           <p className="price-deposit">
-            A <strong>{s.deposit_amount}</strong> deposit secures any booking and comes off the final price.
+            A <strong>{s.deposit_amount}</strong> non-refundable booking fee secures any session. It comes off the final price on the day.
           </p>
         )}
 

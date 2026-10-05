@@ -60,7 +60,7 @@ export default function ManageBooking() {
           <div><dt>Status</dt><dd style={{ color: booking.status === 'cancelled' ? 'var(--blood)' : booking.status === 'confirmed' ? 'var(--ok)' : 'var(--gold)' }}>{STATUS_TEXT[booking.status] || booking.status}</dd></div>
           {booking.slot_date && <div><dt>Date</dt><dd>{fmtLong(booking.slot_date)}</dd></div>}
           {booking.slot_label && <div><dt>Time</dt><dd>{booking.slot_label}</dd></div>}
-          <div><dt>Deposit</dt><dd>{booking.deposit_status === 'paid' ? 'Paid' : booking.deposit_status === 'waived' ? 'Not needed' : 'Not paid yet'}</dd></div>
+          <div><dt>Booking fee</dt><dd>{booking.deposit_status === 'paid' ? 'Paid' : booking.deposit_status === 'waived' ? 'Not needed' : 'Not paid yet'}</dd></div>
         </dl>
 
         {booking.description && (
@@ -73,7 +73,7 @@ export default function ManageBooking() {
         <div className="bk-done-actions">
           {booking.status !== 'cancelled' && booking.deposit_status === 'unpaid' && settings.deposit_link && (
             <a href={settings.deposit_link} target="_blank" rel="noreferrer" className="btn btn-gold">
-              Pay deposit{settings.deposit_amount ? ` (${settings.deposit_amount})` : ''}
+              Pay booking fee{settings.deposit_amount ? ` (${settings.deposit_amount})` : ''}
             </a>
           )}
           {canCancel && !confirming && <button className="btn btn-outline" onClick={() => setConfirming(true)}>Cancel this booking</button>}
@@ -82,7 +82,7 @@ export default function ManageBooking() {
 
         {confirming && (
           <div className="bk-notice">
-            <p style={{ marginBottom: '1rem' }}>Cancel your booking on {fmtLong(booking.slot_date)}? {settings.deposit_note}</p>
+            <p style={{ marginBottom: '1rem' }}>Cancel your booking on {fmtLong(booking.slot_date)}?{booking.deposit_status === 'paid' ? ' Your booking fee is non-refundable, as agreed when you booked.' : ''}</p>
             <div className="bk-done-actions">
               <button className="btn btn-red" onClick={cancel} disabled={busy}>{busy ? 'Cancelling…' : 'Yes, cancel it'}</button>
               <button className="btn btn-outline" onClick={() => setConfirming(false)}>Keep my booking</button>

@@ -90,12 +90,12 @@ export default function AdminSettings() {
       </div>
 
       <div className="admin-form-card">
-        <h3>Bookings and deposits</h3>
+        <h3>Bookings and booking fee</h3>
         <div className="admin-form-row">
-          {field('deposit_amount', 'Deposit amount', { placeholder: 'e.g. £30' })}
-          {field('deposit_link', 'Deposit payment link', { type: 'url', placeholder: 'https://…', help: 'A Stripe Payment Link, PayPal.me or Monzo.me link. Customers see a Pay deposit button after booking.' })}
+          {field('deposit_amount', 'Booking fee amount', { placeholder: 'e.g. £30' })}
+          {field('deposit_link', 'Booking fee payment link', { type: 'url', placeholder: 'https://…', help: 'A Stripe Payment Link, PayPal.me or Monzo.me link. Customers see a Pay booking fee button after booking.' })}
         </div>
-        {field('deposit_note', 'Deposit policy', { rows: 2 })}
+        {field('deposit_note', 'Booking fee terms', { rows: 3, help: 'Customers must tick a box agreeing to this before they can book, and it appears on their confirmation. Keep it clear and specific.' })}
         {field('booking_notice', 'Notice on the booking page (optional)', { rows: 2, placeholder: 'e.g. Books closed 1–14 August while I\'m away.' })}
       </div>
 

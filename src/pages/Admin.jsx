@@ -56,7 +56,7 @@ function Dashboard({ data, go, reload }) {
           <p className="ds-value">{pending.length}</p><p className="ds-label">Waiting for you</p>
         </button>
         <button className="dash-stat" onClick={() => go('bookings')} style={{ textAlign: 'left', border: 'none', cursor: 'pointer', color: 'inherit' }}>
-          <p className="ds-value">{unpaid.length}</p><p className="ds-label">Deposits not paid</p>
+          <p className="ds-value">{unpaid.length}</p><p className="ds-label">Booking fees not paid</p>
         </button>
         <button className="dash-stat" onClick={() => go('inbox')} style={{ textAlign: 'left', border: 'none', cursor: 'pointer', color: 'inherit' }}>
           <p className="ds-value">{unread}</p><p className="ds-label">Unread messages</p>
@@ -101,7 +101,7 @@ function Dashboard({ data, go, reload }) {
                   <p className="adm-name">{b.customer_name}</p>
                   <p className="adm-meta"><span className="adm-gold">{fmtShort(b.booking_slots.slot_date)}, {b.booking_slots.label}</span> · {b.customer_phone}</p>
                 </div>
-                <span className={`status-badge status-${b.deposit_status || 'unpaid'}`}>Deposit {b.deposit_status === 'paid' ? 'paid' : b.deposit_status === 'waived' ? 'waived' : 'unpaid'}</span>
+                <span className={`status-badge status-${b.deposit_status || 'unpaid'}`}>Fee {b.deposit_status === 'paid' ? 'paid' : b.deposit_status === 'waived' ? 'waived' : 'unpaid'}</span>
               </div>
             </div>
           ))}

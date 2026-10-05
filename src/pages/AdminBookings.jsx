@@ -49,7 +49,7 @@ function BookingCard({ b, onChange }) {
         </div>
         <div style={{ display: 'flex', gap: '.4rem', flexWrap: 'wrap' }}>
           <span className={`status-badge status-${b.status}`}>{b.status}</span>
-          <span className={`status-badge status-${b.deposit_status || 'unpaid'}`}>Deposit {b.deposit_status || 'unpaid'}</span>
+          <span className={`status-badge status-${b.deposit_status || 'unpaid'}`}>Fee {b.deposit_status || 'unpaid'}</span>
         </div>
       </div>
 
@@ -63,6 +63,11 @@ function BookingCard({ b, onChange }) {
           <p className="adm-meta">{[b.tattoo_style, b.flash ? `Flash: ${b.flash.title}` : null].filter(Boolean).join(' · ') || 'No style given'}</p>
           {b.description && <p className="adm-body">{b.description}</p>}
           {b.reference_info && <p className="adm-meta" style={{ marginTop: '.4rem' }}>Links: {b.reference_info}</p>}
+          {b.fee_terms_accepted_at && (
+            <p className="adm-meta" style={{ marginTop: '.4rem' }} title={b.fee_terms_text || ''}>
+              Agreed to booking fee terms on {new Date(b.fee_terms_accepted_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </p>
+          )}
         </div>
       </div>
 
@@ -76,7 +81,7 @@ function BookingCard({ b, onChange }) {
         {b.status !== 'cancelled' && <button className="admin-action-btn danger" onClick={() => status('cancelled')}><Ban size={14} /> Cancel</button>}
         {b.status === 'cancelled' && <button className="admin-action-btn" onClick={() => status('pending')}>Restore</button>}
         <label className="adm-check" style={{ marginLeft: '.5rem' }}>
-          Deposit
+          Booking fee
           <select value={b.deposit_status || 'unpaid'} onChange={e => deposit(e.target.value)}>
             <option value="unpaid">Not paid</option>
             <option value="paid">Paid</option>
@@ -138,7 +143,7 @@ export default function AdminBookings({ onChange }) {
       </div>
       {view === 'list' && (
         <div className="adm-seg">
-          {[['upcoming', 'Upcoming'], ['pending', 'Waiting'], ['unpaid', 'Deposit due'], ['confirmed', 'Confirmed'], ['cancelled', 'Cancelled'], ['all', 'All']].map(([k, l]) => (
+          {[['upcoming', 'Upcoming'], ['pending', 'Waiting'], ['unpaid', 'Fee due'], ['confirmed', 'Confirmed'], ['cancelled', 'Cancelled'], ['all', 'All']].map(([k, l]) => (
             <button key={k} className={filter === k ? 'is-on' : ''} onClick={() => setFilter(k)}>{l}</button>
           ))}
         </div>
